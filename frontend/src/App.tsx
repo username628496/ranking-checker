@@ -8,13 +8,7 @@ import { useSSE, type RankResult } from "@hooks/useSSE";
 import { useTheme } from "@contexts/ThemeContext";
 import {
   ShieldCheck,
-  Trophy,
   AlertTriangle,
-  Crown,
-  Medal,
-  Award,
-  Star,
-  TrendingUp,
   Sun,
   Moon
 } from "lucide-react";
@@ -42,41 +36,6 @@ export default function App() {
       ),
     [results]
   );
-
-  // ✅ Thêm type cho parameter position
-  const getRankDisplay = (position: number | string) => {
-    const pos = typeof position === 'number' ? position : Number(position);
-    switch (pos) {
-      case 1:
-        return { 
-          icon: Crown, 
-          bgColor: "bg-yellow-500", 
-          textColor: "text-white",
-          shadowColor: "shadow-yellow-200"
-        };
-      case 2:
-        return { 
-          icon: Medal, 
-          bgColor: "bg-slate-400", 
-          textColor: "text-white",
-          shadowColor: "shadow-slate-200"
-        };
-      case 3:
-        return { 
-          icon: Award, 
-          bgColor: "bg-amber-600", 
-          textColor: "text-white",
-          shadowColor: "shadow-amber-200"
-        };
-      default:
-        return { 
-          icon: Star, 
-          bgColor: "bg-blue-500", 
-          textColor: "text-white",
-          shadowColor: "shadow-blue-200"
-        };
-    }
-  };
 
   function handleStart(p: {
     sessionId: string;
@@ -134,7 +93,7 @@ export default function App() {
               ? "border-blue-700 bg-blue-900/50 text-blue-300"
               : "border-blue-200 bg-blue-50 text-blue-700"
           }`}>
-            <TrendingUp size={16} className={theme === "dark" ? "text-blue-400" : "text-blue-600"} />
+            <ShieldCheck size={16} className={theme === "dark" ? "text-blue-400" : "text-blue-600"} />
             <span>AE SEO1</span>
           </div>
         </div>
