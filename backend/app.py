@@ -925,7 +925,7 @@ if __name__ == "__main__":
         logger.error(f"❌ Failed to start scheduler: {e}")
 
     try:
-        app.run(host="0.0.0.0", port=8000, debug=False, threaded=True)
+        app.run(host="0.0.0.0", port=8001, debug=False, threaded=True)
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
         logger.info("🛑 Scheduler stopped")

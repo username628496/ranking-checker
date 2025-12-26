@@ -224,11 +224,18 @@ sudo systemctl status ranking-backend
 # Check logs
 sudo journalctl -u ranking-backend -n 50
 
-# Test run manually
+# Test run manually (backend runs on port 8001)
 cd /var/www/ranking-checker/backend
 source venv/bin/activate
 python app.py
 ```
+
+### Port conflict:
+
+Backend đã được cấu hình chạy trên port **8001** để tránh conflict với các webapp khác trên VPS. Nếu cần đổi port:
+1. Sửa port trong `backend/app.py` (dòng 928)
+2. Sửa upstream port trong `nginx.conf` (dòng 4)
+3. Restart cả backend và nginx
 
 ### CORS errors:
 
