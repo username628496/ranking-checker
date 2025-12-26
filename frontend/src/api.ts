@@ -1,7 +1,7 @@
 // Dynamic API base URL based on environment
 const API_BASE = import.meta.env.PROD
   ? "https://ranking.aeseo1.org/api"  // Production domain
-  : "http://localhost:8000/api";      // Development 
+  : "http://localhost:8001/api";      // Development 
 
 export async function fetchTemplates() {
   const res = await fetch(`${API_BASE}/templates`);
