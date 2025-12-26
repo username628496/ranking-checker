@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useTheme } from "@contexts/ThemeContext";
 import {
   Plus,
   Trash2,
   Edit3,
-  Copy,
   X,
-  ChevronDown,
-  ChevronRight,
   Search,
   Calendar,
   Tag,
   Globe,
   Check,
+  Save,
+  FolderOpen,
+  Play,
 } from "lucide-react";
 import {
   fetchTemplates,
@@ -29,7 +30,12 @@ type Template = {
   created_at: string;
 };
 
-export default function UserTemplate() {
+type Props = {
+  onUseTemplate?: (keywords: string, domains: string) => void;
+};
+
+export default function UserTemplate({ onUseTemplate }: Props) {
+  const { theme } = useTheme();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [userName, setUserName] = useState("");
@@ -37,13 +43,8 @@ export default function UserTemplate() {
   const [keywords, setKeywords] = useState("");
   const [domains, setDomains] = useState("");
   const [editId, setEditId] = useState<number | null>(null);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
-
-  function toggleExpand(id: number) {
-    setExpandedId(expandedId === id ? null : id);
-  }
 
   async function loadTemplates() {
     const data = await fetchTemplates();
@@ -91,7 +92,7 @@ export default function UserTemplate() {
     setKeywords(t.keywords.join("\n"));
     setDomains(t.domains.join("\n"));
     setShowForm(true);
-
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function handleDelete(id: number) {
@@ -107,10 +108,22 @@ export default function UserTemplate() {
     setTimeout(() => setCopyFeedback(null), 2000);
   }
 
+  function handleQuickUse(t: Template) {
+    const keywordsText = t.keywords.join("\n");
+    const domainsText = t.domains.join("\n");
+
+    if (onUseTemplate) {
+      onUseTemplate(keywordsText, domainsText);
+      setCopyFeedback("Đã tải template vào form!");
+      setTimeout(() => setCopyFeedback(null), 2000);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString("vi-VN", {
       day: "2-digit",
-      month: "2-digit", 
+      month: "2-digit",
       year: "numeric",
     });
   }
@@ -121,297 +134,403 @@ export default function UserTemplate() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="rounded-xl backdrop-blur-sm border shadow-sm overflow-hidden">
       {/* Copy feedback toast */}
       {copyFeedback && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 py-2 rounded-lg shadow-xs flex items-center gap-2 animate-pulse">
-          <Check className="w-4 h-4" />
-          {copyFeedback}
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-green-500 text-white shadow-lg">
+            <Check className="w-4 h-4" />
+            <span className="font-medium text-sm">{copyFeedback}</span>
+          </div>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-        
-          <h3 className="text-4xl font-bold text-slate-900">Template cá nhân</h3>
-          <p className="text-slate-600 max-w-2xl mx-auto text-lg">
-            Lưu trữ và quản lý bộ từ khóa & domain của riêng bạn
-          </p>
-          <div className="flex items-center justify-center gap-6 text-sm text-slate-500">
-            <span className="flex items-center gap-2">
-              <Tag className="w-4 h-4" />
-              {templates.length} templates
-            </span>
-            <span className="flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              {templates.reduce((sum, t) => sum + t.domains.length, 0)} domains
-            </span>
-          </div>
+      {/* Header - Stripe Style */}
+      <div className={`relative px-6 py-5 ${
+        theme === "dark"
+          ? "bg-gradient-to-b from-gray-800/40 via-gray-800/20 to-transparent"
+          : "bg-gradient-to-b from-gray-50/80 via-white/40 to-transparent"
+      }`}>
+        {/* Bottom gradient border */}
+        <div className={`absolute bottom-0 left-0 right-0 h-px ${
+          theme === "dark"
+            ? "bg-gradient-to-r from-transparent via-gray-700 to-transparent"
+            : "bg-gradient-to-r from-transparent via-gray-200 to-transparent"
+        }`} />
 
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ${
+              theme === "dark"
+                ? "bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 shadow-lg shadow-cyan-500/5"
+                : "bg-gradient-to-br from-cyan-50 to-cyan-100/50 shadow-sm"
+            }`}>
+              <FolderOpen className={`w-4.5 h-4.5 ${theme === "dark" ? "text-cyan-400" : "text-cyan-600"}`} />
+            </div>
+            <div>
+              <h3 className={`font-semibold text-base tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Template cá nhân</h3>
+              <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{templates.length} templates</p>
+            </div>
+          </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg ${
-              showForm
-                ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
-            }`}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+              ${showForm
+                ? theme === "dark"
+                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
+              }
+            `}
           >
             {showForm ? (
               <>
-                <X className="w-5 h-5" />
-                Đóng form
+                <X className="w-4 h-4" />
+                Đóng
               </>
             ) : (
               <>
-                <Plus className="w-5 h-5" />
-                Thêm Template
+                <Plus className="w-4 h-4" />
+                Thêm mới
               </>
             )}
           </button>
         </div>
+      </div>
 
+      {/* Body */}
+      <div className="p-6 space-y-4">
         {/* Form */}
         {showForm && (
-          <div className="bg-white/90 backdrop-blur-sm border border-white/50 rounded-3xl shadow-xs p-8 space-y-6">
-            <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                {editId ? <Edit3 className="w-4 h-4 text-blue-600" /> : <Plus className="w-4 h-4 text-blue-600" />}
+          <div className={`rounded-lg border p-5 ${
+            theme === "dark"
+              ? "bg-gray-800/50 border-gray-700"
+              : "bg-gray-50 border-gray-200"
+          }`}>
+            <div className={`flex items-center gap-2 pb-3 mb-4 border-b ${
+              theme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}>
+              <div className={`flex items-center justify-center w-7 h-7 rounded-lg ${
+                theme === "dark" ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-600"
+              }`}>
+                {editId ? <Edit3 className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
               </div>
-              <h2 className="text-2xl font-semibold text-slate-900">
+              <h4 className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                 {editId ? "Chỉnh sửa Template" : "Tạo Template Mới"}
-              </h2>
+              </h4>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  Tên người dùng
-                </label>
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="Tên người dùng"
-                />
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Tên người dùng</label>
+                  <input
+                    type="text"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg border text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                      theme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                        : "bg-white border-gray-200 text-gray-900 placeholder-gray-400"
+                    }`}
+                    placeholder="Tên người dùng"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Tên template</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-lg border text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                      theme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                        : "bg-white border-gray-200 text-gray-900 placeholder-gray-400"
+                    }`}
+                    placeholder="Tên template"
+                  />
+                </div>
               </div>
-              <div className="space-y-3">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                  Tên template
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="Tên template"
-                />
-              </div>
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-blue-600" />
-                  Keywords
-                </label>
-                <textarea
-                  rows={6}
-                  value={keywords}
-                  onChange={(e) => setKeywords(e.target.value)}
-                  placeholder="Mỗi dòng 1 keyword"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all font-mono text-sm"
-                />
+              <div className="grid md:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className={`text-xs font-medium flex items-center gap-1.5 ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}>
+                    <Tag className={`w-3 h-3 ${theme === "dark" ? "text-green-400" : "text-green-600"}`} />
+                    Keywords
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={keywords}
+                    onChange={(e) => setKeywords(e.target.value)}
+                    placeholder="Mỗi dòng 1 keyword"
+                    className={`w-full px-3 py-2 rounded-lg border text-sm font-mono transition-all duration-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                      theme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                        : "bg-white border-gray-200 text-gray-900 placeholder-gray-400"
+                    }`}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={`text-xs font-medium flex items-center gap-1.5 ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}>
+                    <Globe className={`w-3 h-3 ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`} />
+                    Domains
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={domains}
+                    onChange={(e) => setDomains(e.target.value)}
+                    placeholder="Mỗi dòng 1 domain"
+                    className={`w-full px-3 py-2 rounded-lg border text-sm font-mono transition-all duration-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                      theme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                        : "bg-white border-gray-200 text-gray-900 placeholder-gray-400"
+                    }`}
+                  />
+                </div>
               </div>
-              <div className="space-y-3">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-emerald-600" />
-                  Domains
-                </label>
-                <textarea
-                  rows={6}
-                  value={domains}
-                  onChange={(e) => setDomains(e.target.value)}
-                  placeholder="Mỗi dòng 1 domain"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all font-mono text-sm"
-                />
-              </div>
-            </div>
 
-            <div className="flex gap-4 pt-4">
-              <button
-                onClick={handleSave}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 font-semibold shadow-lg transition-all transform hover:scale-105"
-              >
-                {editId ? "Cập nhật" : "Lưu"}
-              </button>
-              <button
-                onClick={resetForm}
-                className="px-8 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 font-semibold transition-all"
-              >
-                Hủy
-              </button>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-all duration-200"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  {editId ? "Cập nhật" : "Lưu"}
+                </button>
+                <button
+                  onClick={resetForm}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    theme === "dark"
+                      ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Hủy
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        
-
         {/* Search */}
-        <div className="relative max-w-md mx-auto group">
-  {/* Icon Search */}
-  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 w-5 h-5 transition-colors" />
-
-  {/* Input */}
-  <input
-    type="text"
-    placeholder="Tìm template..."
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-    className="w-full pl-12 pr-12 py-4 rounded-full bg-white/80 border border-slate-200 shadow-xs 
-               placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-               focus:outline-none transition-all text-slate-700"
-  />
-
-  {/* Nút clear khi có text */}
-  {searchQuery && (
-    <button
-      onClick={() => setSearchQuery("")}
-      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 transition-colors"
-    >
-      <X className="w-5 h-5" />
-    </button>
-  )}
-</div>
-
-        {/* Template List */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTemplates.map((t) => (
-            <div
-              key={t.id}
-              className="group bg-white/80 backdrop-blur-sm border-2 border-white/50 rounded-2xl shadow-xs p-6 hover:shadow-2xs hover:scale-100 transition-all duration-300"
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2">
+            <Search className={`w-4 h-4 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`} />
+          </div>
+          <input
+            type="text"
+            placeholder="Tìm template..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`w-full pl-10 pr-10 py-2.5 rounded-lg border text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+              theme === "dark"
+                ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                : "bg-white border-gray-200 text-gray-900 placeholder-gray-400"
+            }`}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded transition-colors ${
+                theme === "dark" ? "hover:bg-gray-600" : "hover:bg-gray-100"
+              }`}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="font-bold text-slate-900 text-lg mb-1 group-hover:text-blue-700 transition-colors">
-                    {t.name}
-                  </h3>
-                  <p className="text-sm text-slate-600 font-medium">{t.user_name}</p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Tag className="w-3 h-3" />
-                      {t.keywords.length} keywords
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Globe className="w-3 h-3" />
-                      {t.domains.length} domains
-                    </span>
+              <X className={`w-4 h-4 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`} />
+            </button>
+          )}
+        </div>
+
+        {/* Template Grid */}
+        {filteredTemplates.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filteredTemplates.map((t) => (
+              <div
+                key={t.id}
+                className={`rounded-lg border p-4 transition-all duration-200 ${
+                  theme === "dark"
+                    ? "bg-gray-800 border-gray-700 hover:shadow-md hover:border-gray-600"
+                    : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300"
+                }`}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`font-semibold text-sm truncate mb-1 ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}>
+                      {t.name}
+                    </h4>
+                    <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{t.user_name}</p>
                   </div>
+                </div>
+
+                {/* Stats */}
+                <div className={`flex items-center gap-3 mb-3 text-xs ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}>
+                  <span className="flex items-center gap-1">
+                    <Tag className={`w-3 h-3 ${theme === "dark" ? "text-green-400" : "text-green-600"}`} />
+                    {t.keywords.length}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Globe className={`w-3 h-3 ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`} />
+                    {t.domains.length}
+                  </span>
                   {t.created_at && (
-                    <p className="text-xs text-slate-400 mt-1">
-                      <Calendar className="w-3 h-3 inline mr-1" />
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
                       {formatDate(t.created_at)}
-                    </p>
+                    </span>
                   )}
                 </div>
 
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Preview tags */}
+                <div className={`space-y-2 mb-3 pb-3 border-b ${
+                  theme === "dark" ? "border-gray-700" : "border-gray-100"
+                }`}>
+                  <div className="flex flex-wrap gap-1.5">
+                    {t.keywords.slice(0, 2).map((k, i) => (
+                      <span
+                        key={i}
+                        className={`px-2 py-0.5 rounded border text-xs truncate max-w-[90px] ${
+                          theme === "dark"
+                            ? "bg-green-900/20 border-green-800 text-green-300"
+                            : "bg-green-50 border-green-200 text-green-700"
+                        }`}
+                        title={k}
+                      >
+                        {k}
+                      </span>
+                    ))}
+                    {t.keywords.length > 2 && (
+                      <span className={`px-2 py-0.5 rounded border text-xs ${
+                        theme === "dark"
+                          ? "bg-gray-700 border-gray-600 text-gray-300"
+                          : "bg-gray-50 border-gray-200 text-gray-600"
+                      }`}>
+                        +{t.keywords.length - 2}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {t.domains.slice(0, 1).map((d, i) => (
+                      <span
+                        key={i}
+                        className={`px-2 py-0.5 rounded border font-mono text-xs truncate max-w-[120px] ${
+                          theme === "dark"
+                            ? "bg-blue-900/20 border-blue-800 text-blue-300"
+                            : "bg-blue-50 border-blue-200 text-blue-700"
+                        }`}
+                        title={d}
+                      >
+                        {d}
+                      </span>
+                    ))}
+                    {t.domains.length > 1 && (
+                      <span className={`px-2 py-0.5 rounded border text-xs ${
+                        theme === "dark"
+                          ? "bg-gray-700 border-gray-600 text-gray-300"
+                          : "bg-gray-50 border-gray-200 text-gray-600"
+                      }`}>
+                        +{t.domains.length - 1}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-5 gap-1.5">
                   <button
-                    onClick={() => handleCopy(t.keywords, "keywords")}
-                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                    title="Copy keywords"
+                    onClick={() => handleQuickUse(t)}
+                    className="col-span-2 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-green-500 text-white text-xs font-medium hover:bg-green-600 transition-all duration-200"
+                    title="Sử dụng nhanh"
                   >
-                    <Copy className="w-4 h-4" />
+                    <Play className="w-3 h-3" />
+                    <span>Dùng</span>
                   </button>
                   <button
-                    onClick={() => handleCopy(t.domains, "domains")}
-                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                    title="Copy domains"
+                    onClick={() => handleCopy(t.keywords, "từ khóa")}
+                    className={`flex items-center justify-center p-2 rounded-lg border transition-all duration-200 ${
+                      theme === "dark"
+                        ? "border-green-800 text-green-400 hover:bg-green-900/20"
+                        : "border-green-200 text-green-600 hover:bg-green-50"
+                    }`}
+                    title="Copy từ khóa"
                   >
-                    <Copy className="w-4 h-4" />
+                    <Tag className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleCopy(t.domains, "domain")}
+                    className={`flex items-center justify-center p-2 rounded-lg border transition-all duration-200 ${
+                      theme === "dark"
+                        ? "border-blue-800 text-blue-400 hover:bg-blue-900/20"
+                        : "border-blue-200 text-blue-600 hover:bg-blue-50"
+                    }`}
+                    title="Copy domain"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleEdit(t)}
-                    className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                    className={`flex items-center justify-center p-2 rounded-lg border transition-all duration-200 ${
+                      theme === "dark"
+                        ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
                     title="Chỉnh sửa"
                   >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(t.id)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                    title="Xóa"
-                  >
-                    <Trash2 className="w-4 h-4" />
+                    <Edit3 className="w-3.5 h-3.5" />
                   </button>
                 </div>
+
+                {/* Delete button - separate row */}
+                <button
+                  onClick={() => handleDelete(t.id)}
+                  className={`w-full mt-2 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border text-xs transition-all duration-200 ${
+                    theme === "dark"
+                      ? "border-red-800 text-red-400 hover:bg-red-900/20"
+                      : "border-red-200 text-red-600 hover:bg-red-50"
+                  }`}
+                  title="Xóa"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Xóa template</span>
+                </button>
               </div>
-
-              {/* Preview tags */}
-              <div className="space-y-2 mb-4">
-                <div className="flex flex-wrap gap-1">
-                  {t.keywords.slice(0, 3).map((k, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md font-medium"
-                    >
-                      {k}
-                    </span>
-                  ))}
-                  {t.keywords.length > 3 && (
-                    <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-md">
-                      +{t.keywords.length - 3}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {t.domains.slice(0, 2).map((d, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-md font-mono"
-                    >
-                      {d}
-                    </span>
-                  ))}
-                  {t.domains.length > 2 && (
-                    <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-md">
-                      +{t.domains.length - 2}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-
-             
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className={`flex items-center justify-center w-12 h-12 rounded-lg mx-auto mb-3 ${
+              theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+            }`}>
+              <Search className={`w-6 h-6 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`} />
             </div>
-          ))}
-        </div>
-
-        {/* Empty state */}
-        {filteredTemplates.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              {searchQuery ? "Không tìm thấy template nào" : "Chưa có template nào"}
-            </h3>
-            <p className="text-slate-600 mb-6">
-              {searchQuery 
-                ? "Thử tìm kiếm với từ khóa khác" 
+            <h4 className={`text-sm font-semibold mb-1 ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}>
+              {searchQuery ? "Không tìm thấy template" : "Chưa có template"}
+            </h4>
+            <p className={`text-xs mb-4 ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}>
+              {searchQuery
+                ? "Thử tìm kiếm với từ khóa khác"
                 : "Tạo template đầu tiên để bắt đầu"
               }
             </p>
             {!showForm && !searchQuery && (
               <button
                 onClick={() => setShowForm(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold shadow-lg transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-all duration-200"
               >
                 <Plus className="w-4 h-4" />
-                Tạo Template Đầu Tiên
+                Tạo Template
               </button>
             )}
           </div>

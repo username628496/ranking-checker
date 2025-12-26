@@ -1,5 +1,5 @@
-import React from "react";
-import { ExternalLink, Trophy, Target, Calendar, MapPin, TrendingUp, Eye, Globe } from "lucide-react";
+import { ExternalLink, Trophy, Target, TrendingUp, Globe, Calendar, MapPin } from "lucide-react";
+import { useTheme } from "@contexts/ThemeContext";
 
 type RankResult = {
   keyword: string;
@@ -20,171 +20,204 @@ function hostFromUrl(u?: string | null) {
 }
 
 export default function ResultTable({ results }: { results: RankResult[] }) {
+  const { theme } = useTheme();
+
   if (!results.length) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-12">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Trophy className="w-8 h-8 text-gray-400" />
+      <div className="rounded-xl backdrop-blur-sm border shadow-sm p-12">
+        <div className="flex flex-col items-center text-center">
+          <div className={`flex items-center justify-center w-12 h-12 rounded-lg mb-3 ${
+            theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+          }`}>
+            <Trophy className={`w-6 h-6 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`} />
           </div>
-          <p className="text-gray-500 font-medium">Chưa có kết quả kiểm tra nào</p>
-          <p className="text-sm text-gray-400 mt-1">Hãy thêm từ khóa để bắt đầu kiểm tra ranking</p>
+          <p className={`font-semibold text-sm mb-1 ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}>Chưa có kết quả</p>
+          <p className={`text-xs ${
+            theme === "dark" ? "text-gray-400" : "text-gray-500"
+          }`}>Hãy thêm từ khóa để bắt đầu kiểm tra</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
-      {/* Enhanced Header */}
-      <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-lg">
-                Kết quả kiểm tra
-              </h3>
-              <p className="text-sm text-gray-500">
-                {results.length} từ khóa được phân tích
-              </p>
-            </div>
+    <div className="rounded-xl backdrop-blur-sm border shadow-sm overflow-hidden">
+      {/* Header - Stripe Style */}
+      <div className={`relative px-6 py-5 ${
+        theme === "dark"
+          ? "bg-gradient-to-b from-gray-800/40 via-gray-800/20 to-transparent"
+          : "bg-gradient-to-b from-gray-50/80 via-white/40 to-transparent"
+      }`}>
+        {/* Bottom gradient border */}
+        <div className={`absolute bottom-0 left-0 right-0 h-px ${
+          theme === "dark"
+            ? "bg-gradient-to-r from-transparent via-gray-700 to-transparent"
+            : "bg-gradient-to-r from-transparent via-gray-200 to-transparent"
+        }`} />
+
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ${
+            theme === "dark"
+              ? "bg-gradient-to-br from-purple-500/10 to-purple-600/5 shadow-lg shadow-purple-500/5"
+              : "bg-gradient-to-br from-purple-50 to-purple-100/50 shadow-sm"
+          }`}>
+            <Trophy className={`w-4.5 h-4.5 ${theme === "dark" ? "text-purple-400" : "text-purple-600"}`} />
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200">
-            <Eye className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-600">Live Data</span>
+          <div>
+            <h3 className={`font-semibold text-base tracking-tight ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Kết quả kiểm tra</h3>
+            <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{results.length} kết quả</p>
           </div>
         </div>
       </div>
 
-      {/* Modern Table */}
+      {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-50/80">
-              <th className="px-6 py-4 text-left">
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">#</span>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-gray-500" />
-                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Từ khóa</span>
+        <table className="w-full">
+          <thead className={theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"}>
+            <tr className={`border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+              <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide ${
+                theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}>#</th>
+              <th className="px-4 py-3 text-left">
+                <div className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  <Target className="w-3 h-3" />
+                  <span>Từ khóa</span>
                 </div>
               </th>
-              <th className="px-6 py-4 text-left">
-              <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-gray-500" />
-
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Domain gốc</span>
+              <th className="px-4 py-3 text-left">
+                <div className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  <Globe className="w-3 h-3" />
+                  <span>Domain</span>
                 </div>
               </th>
-              <th className="px-6 py-4 text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-gray-500" />
-                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Vị trí</span>
+              <th className="px-4 py-3 text-center">
+                <div className={`flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  <TrendingUp className="w-3 h-3" />
+                  <span>Rank</span>
                 </div>
               </th>
-              <th className="px-6 py-4 text-center">
-              <div className="flex items-center justify-center gap-2">
-              <Trophy className="w-4 h-4 text-gray-500" />
-
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Ranking domain</span>
-                </div>
-
-              </th>
-              <th className="px-6 py-4 text-left">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-500" />
-                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Ngày kiểm tra</span>
+              <th className="px-4 py-3 text-left">
+                <div className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  <ExternalLink className="w-3 h-3" />
+                  <span>URL</span>
                 </div>
               </th>
-              <th className="px-6 py-4 text-left">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Khu vực</span>
+              <th className="px-4 py-3 text-left">
+                <div className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  <Calendar className="w-3 h-3" />
+                  <span>Ngày</span>
+                </div>
+              </th>
+              <th className="px-4 py-3 text-left">
+                <div className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  <MapPin className="w-3 h-3" />
+                  <span>Vị trí</span>
                 </div>
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className={`divide-y ${theme === "dark" ? "divide-gray-700" : "divide-gray-200"}`}>
             {results.map((r, i) => {
               const posNum = typeof r.position === "number" ? r.position : Number(r.position);
               const isNA = Number.isNaN(posNum);
-              
-              let badge;
-              if (isNA) {
-                badge = "bg-gray-50 text-gray-500 border border-gray-200";
-              } else if (posNum <= 6) {
-                badge = "bg-green-50 text-green-700 border border-green-200";
-              } else if (posNum <= 10) {
-                badge = "bg-yellow-50 text-yellow-700 border border-yellow-200";
-              } else if (posNum <= 50) {
-                badge = "bg-red-50 text-red-700 border border-red-200";
-              } else {
-                badge = "bg-gray-50 text-gray-500 border border-gray-200";
+
+              let badgeColor = theme === "dark" ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-700";
+              if (!isNA) {
+                if (posNum <= 3) {
+                  badgeColor = "bg-green-500 text-white";
+                } else if (posNum <= 6) {
+                  badgeColor = "bg-yellow-500 text-white";
+                } else if (posNum <= 10) {
+                  badgeColor = "bg-red-500 text-white";
+                } else if (posNum <= 20) {
+                  badgeColor = theme === "dark" ? "bg-blue-900/30 text-blue-300" : "bg-blue-100 text-blue-700";
+                } else if (posNum <= 50) {
+                  badgeColor = theme === "dark" ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-700";
+                } else {
+                  badgeColor = theme === "dark" ? "bg-gray-800 text-gray-400" : "bg-gray-50 text-gray-500";
+                }
               }
 
               return (
-                <tr 
-                  key={`${r.keyword}-${i}`} 
-                  className="hover:bg-gray-50/50 transition-colors duration-150"
-                >
-                  <td className="px-6 py-4">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">{i + 1}</span>
+                <tr key={`${r.keyword}-${i}`} className={`transition-colors ${
+                  theme === "dark" ? "hover:bg-gray-800/50" : "hover:bg-gray-50"
+                }`}>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-medium ${
+                      theme === "dark" ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {i + 1}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                      <span className={`font-medium text-sm ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{r.keyword}</span>
                     </div>
                   </td>
-                  
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="font-medium text-gray-900">{r.keyword}</span>
-                    </div>
-                  </td>
-                  
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-mono text-sm border">
+
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded border font-mono text-xs ${
+                      theme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-gray-300"
+                        : "bg-gray-100 border-gray-200 text-gray-700"
+                    }`}>
                       {r.domain}
                     </span>
                   </td>
-                  
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center">
-                      <span className={`inline-flex items-center px-3 py-2 text-sm font-semibold rounded-lg ${badge}`}>
-                        {isNA ? "N/A" : `#${posNum}`}
-                      </span>
-                    </div>
+
+                  <td className="px-4 py-3 text-center">
+                    <span className={`inline-block px-2 py-1 rounded-md text-xs font-bold ${badgeColor}`}>
+                      {isNA ? "N/A" : `#${posNum}`}
+                    </span>
                   </td>
-                  
-                  <td className="px-6 py-4">
+
+                  <td className="px-4 py-3">
                     {r.url && !isNA ? (
-                      <a 
-                        href={r.url} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-lg transition-all duration-150 group max-w-48"
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`inline-flex items-center gap-1 text-xs max-w-[180px] group ${
+                          theme === "dark"
+                            ? "text-blue-400 hover:text-blue-300"
+                            : "text-blue-600 hover:text-blue-700"
+                        }`}
                       >
-                        <span className="truncate font-medium">{hostFromUrl(r.url)}</span>
-                        <ExternalLink className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span className="truncate">{hostFromUrl(r.url)}</span>
+                        <ExternalLink className="w-3 h-3 shrink-0 group-hover:translate-x-0.5 transition-transform" />
                       </a>
                     ) : (
-                      <span className="text-gray-400 font-medium">-</span>
+                      <span className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>-</span>
                     )}
                   </td>
-                  
-                  <td className="px-6 py-4">
-                    <span className="text-gray-600 font-medium">
-                      {r.checked_at || "-"}
-                    </span>
+
+                  <td className="px-4 py-3">
+                    <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{r.checked_at || "-"}</span>
                   </td>
-                  
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-2 text-gray-600">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+
+                  <td className="px-4 py-3">
+                    <div className={`inline-flex items-center gap-1.5 text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}>
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                       {r.location_display || "-"}
-                    </span>
+                    </div>
                   </td>
                 </tr>
               );
@@ -193,29 +226,51 @@ export default function ResultTable({ results }: { results: RankResult[] }) {
         </table>
       </div>
 
-     {/* Footer Stats */}
-<div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100">
-  <div className="flex items-center justify-between text-sm">
-    <div className="flex items-center gap-4">
-      <span className="text-gray-600">
-        <strong>{results.filter(r => {
-          const pos = Number(r.position);
-          return !isNaN(pos) && pos <= 6;
-        }).length}</strong> từ khóa trong top 6
-      </span>
-      <span className="text-gray-400">•</span>
-      <span className="text-gray-600">
-        <strong>{results.filter(r => {
-          const pos = Number(r.position);
-          return !isNaN(pos) && pos <= 3;
-        }).length}</strong> từ khóa trong top 3
-      </span>
-    </div>
-    <div className="text-gray-500">
-      Cập nhật lần cuối: {new Date().toLocaleDateString("vi-VN")}
-    </div>
-  </div>
-</div>
+      {/* Footer Stats */}
+      <div className={`px-6 py-4 border-t ${
+        theme === "dark"
+          ? "bg-gray-800/50 border-gray-700"
+          : "bg-gray-50 border-gray-200"
+      }`}>
+        <div className="grid grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
+              {results.filter(r => {
+                const pos = Number(r.position);
+                return !isNaN(pos) && pos <= 3;
+              }).length}
+            </div>
+            <div className={`text-xs mt-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Top 1-3</div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${theme === "dark" ? "text-yellow-400" : "text-yellow-600"}`}>
+              {results.filter(r => {
+                const pos = Number(r.position);
+                return !isNaN(pos) && pos >= 4 && pos <= 6;
+              }).length}
+            </div>
+            <div className={`text-xs mt-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Top 4-6</div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${theme === "dark" ? "text-red-400" : "text-red-600"}`}>
+              {results.filter(r => {
+                const pos = Number(r.position);
+                return !isNaN(pos) && pos >= 7 && pos <= 10;
+              }).length}
+            </div>
+            <div className={`text-xs mt-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Top 7-10</div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`}>
+              {results.filter(r => {
+                const pos = Number(r.position);
+                return !isNaN(pos) && pos >= 11 && pos <= 50;
+              }).length}
+            </div>
+            <div className={`text-xs mt-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Top 11-50</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

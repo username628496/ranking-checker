@@ -3,3 +3,6 @@ flask-cors>=4.0
 requests>=2.31
 python-dotenv>=1.0
 SQLAlchemy
+Flask-SQLAlchemy
+APScheduler>=3.10
+pytz>=2024.1

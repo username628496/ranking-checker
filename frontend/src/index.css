@@ -1,1 +1,30 @@
 @import "tailwindcss";
+@plugin "daisyui";
+
+/* Tracking Table Custom Styles */
+.tracking-table thead th {
+  background-color: oklch(var(--b2));
+  border-color: oklch(var(--bc) / 0.2);
+}
+
+.tracking-table tbody td {
+  border-color: oklch(var(--bc) / 0.1);
+}
+
+.tracking-table tbody tr:hover {
+  background-color: oklch(var(--b2) / 0.5);
+}
+
+.tracking-table .sticky-header {
+  background-color: oklch(var(--b2));
+  border-color: oklch(var(--bc) / 0.2);
+}
+
+.tracking-table .sticky-cell {
+  background-color: oklch(var(--b1));
+  border-color: oklch(var(--bc) / 0.2);
+}
+
+.tracking-table .sticky-cell-shadow {
+  box-shadow: 2px 0 4px oklch(var(--bc) / 0.05);
+}

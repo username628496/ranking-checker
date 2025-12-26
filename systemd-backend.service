@@ -1,0 +1,20 @@
+[Unit]
+Description=Ranking Checker Backend API
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/ranking-checker/backend
+Environment="PATH=/var/www/ranking-checker/backend/venv/bin"
+Environment="ENVIRONMENT=production"
+EnvironmentFile=/var/www/ranking-checker/.env.production
+ExecStart=/var/www/ranking-checker/backend/venv/bin/python /var/www/ranking-checker/backend/app.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/ranking-checker/backend.log
+StandardError=append:/var/log/ranking-checker/backend-error.log
+
+[Install]
+WantedBy=multi-user.target

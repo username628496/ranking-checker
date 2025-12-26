@@ -1,14 +1,13 @@
 import React, { useMemo, useRef, useState } from "react";
+import { useTheme } from "@contexts/ThemeContext";
 import {
   Settings,
   Monitor,
   Smartphone,
   Globe,
   Type,
-  Cog,
   Zap,
-  Power,
-  CheckCircle2,
+  Play,
   AlertCircle,
 } from "lucide-react";
 
@@ -20,11 +19,13 @@ type Props = {
     domains: string[];
   }) => void;
   onError: (msg: string) => void;
+  initialKeywords?: string;
+  initialDomains?: string;
 };
 
 const deviceOptions = [
-  { value: "desktop", label: "Desktop", icon: <Monitor className="w-4 h-4" /> },
-  { value: "mobile", label: "Mobile", icon: <Smartphone className="w-4 h-4" /> },
+  { value: "desktop", label: "Desktop", icon: Monitor },
+  { value: "mobile", label: "Mobile", icon: Smartphone },
 ] as const;
 
 const locationOptions = [
@@ -44,13 +45,13 @@ function normalizeDomain(d: string): string {
 
 function validateKeywords(keywords: string[]): { valid: boolean; issues: string[] } {
   const issues: string[] = [];
-  if (keywords.length === 0) issues.push("Chưa có từ khóa nào");
+  if (keywords.length === 0) issues.push("Chưa có từ khóa");
   return { valid: issues.length === 0, issues };
 }
 
 function validateDomains(domains: string[]): { valid: boolean; issues: string[] } {
   const issues: string[] = [];
-  if (domains.length === 0) issues.push("Chưa có domain nào");
+  if (domains.length === 0) issues.push("Chưa có domain");
   return { valid: issues.length === 0, issues };
 }
 
@@ -58,19 +59,30 @@ function validatePairs(keywords: string[], domains: string[]): { valid: boolean;
   const issues: string[] = [];
   if (keywords.length !== domains.length) {
     issues.push(
-      `Số lượng từ khóa (${keywords.length}) và domain (${domains.length}) không khớp`
+      `Số lượng không khớp: ${keywords.length} từ khóa & ${domains.length} domain`
     );
   }
   return { valid: issues.length === 0, issues };
 }
 
-export default function Form({ onStart, onError }: Props) {
+export default function Form({ onStart, onError, initialKeywords, initialDomains }: Props) {
+  const { theme } = useTheme();
   const formRef = useRef<HTMLDivElement | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [location, setLocation] = useState<string>("vn");
-  const [keywordsText, setKeywordsText] = useState("");
-  const [domainsText, setDomainsText] = useState("");
+  const [keywordsText, setKeywordsText] = useState(initialKeywords || "");
+  const [domainsText, setDomainsText] = useState(initialDomains || "");
+
+  // Update text when template data changes
+  React.useEffect(() => {
+    if (initialKeywords !== undefined && initialKeywords !== null) {
+      setKeywordsText(initialKeywords);
+    }
+    if (initialDomains !== undefined && initialDomains !== null) {
+      setDomainsText(initialDomains);
+    }
+  }, [initialKeywords, initialDomains]);
 
   const keywords = useMemo(
     () => keywordsText.split("\n").map((s) => s.trim()).filter(Boolean),
@@ -130,134 +142,268 @@ export default function Form({ onStart, onError }: Props) {
   const selectedDevice = deviceOptions.find((opt) => opt.value === device);
 
   return (
-    <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow border border-gray-100">
-      {/* Header */}
-      <div className="px-8 py-6 border-b border-gray-100">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-            <Settings className="w-5 h-5 text-white" />
+    <div className="rounded-xl backdrop-blur-sm border shadow-sm overflow-hidden">
+      {/* Header with Settings - Stripe Style */}
+      <div className={`relative px-6 py-5 ${
+        theme === "dark"
+          ? "bg-gradient-to-b from-gray-800/40 via-gray-800/20 to-transparent"
+          : "bg-gradient-to-b from-gray-50/80 via-white/40 to-transparent"
+      }`}>
+        {/* Bottom gradient border */}
+        <div className={`absolute bottom-0 left-0 right-0 h-px ${
+          theme === "dark"
+            ? "bg-gradient-to-r from-transparent via-gray-700 to-transparent"
+            : "bg-gradient-to-r from-transparent via-gray-200 to-transparent"
+        }`} />
+
+        <div className="flex items-center justify-between gap-6">
+          {/* Left: Title */}
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 ${
+              theme === "dark"
+                ? "bg-gradient-to-br from-orange-500/10 to-orange-600/5 shadow-lg shadow-orange-500/5"
+                : "bg-gradient-to-br from-orange-50 to-orange-100/50 shadow-sm"
+            }`}>
+              <Settings className={`w-4.5 h-4.5 ${theme === "dark" ? "text-orange-400" : "text-orange-600"}`} />
+            </div>
+            <div>
+              <h3 className={`font-semibold text-base tracking-tight ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}>Cấu hình kiểm tra</h3>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 text-lg">
-              Cấu Hình Google Ranking Checker
-            </h3>
-            <p className="text-sm text-gray-500">Không giới hạn số lượng kiểm tra</p>
+
+          {/* Right: Device & Location */}
+          <div className="flex items-center gap-3">
+            {/* Device Selection */}
+            <div className="flex gap-1.5">
+              {deviceOptions.map((opt) => {
+                const Icon = opt.icon;
+                const isActive = device === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setDevice(opt.value)}
+                    className={`
+                      flex items-center gap-1.5 px-3 py-1.5 rounded-md
+                      text-xs font-medium transition-all duration-200
+                      ${isActive
+                        ? "bg-blue-500 text-white shadow-sm"
+                        : theme === "dark"
+                          ? "bg-gray-700 border border-gray-600 text-gray-200 hover:border-gray-500 hover:bg-gray-600"
+                          : "bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                      }
+                    `}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Divider */}
+            <div className={`w-px h-6 ${theme === "dark" ? "bg-gray-600" : "bg-gray-200"}`}></div>
+
+            {/* Location Selection */}
+            <div className="flex gap-1.5">
+              {locationOptions.map((opt) => {
+                const isActive = location === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setLocation(opt.value)}
+                    className={`
+                      px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200
+                      ${isActive
+                        ? "bg-blue-500 text-white shadow-sm"
+                        : theme === "dark"
+                          ? "bg-gray-700 border border-gray-600 text-gray-200 hover:border-gray-500 hover:bg-gray-600"
+                          : "bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                      }
+                    `}
+                    title={opt.label}
+                  >
+                    {opt.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Body */}
-      <div ref={formRef} className="p-8">
-        {/* Inputs */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          {/* Keywords */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <Type className="w-5 h-5 text-blue-600" />
-                Keywords
+      <div className="p-6 space-y-4">
+
+        {/* Input Section */}
+        <div ref={formRef} className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Keywords */}
+            <div className="space-y-2">
+              <label className="flex items-center justify-between">
+                <span className={`text-xs font-medium flex items-center gap-1.5 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  <Type className="w-3.5 h-3.5" />
+                  Từ khóa
+                </span>
+                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">{keywords.length}</span>
               </label>
-              <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                {keywords.length}
-              </span>
+              <textarea
+                rows={7}
+                value={keywordsText}
+                onChange={(e) => setKeywordsText(e.target.value)}
+                className={`
+                  w-full px-3.5 py-2.5 rounded-lg border
+                  text-sm transition-all duration-200 resize-none
+                  focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                  ${theme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 hover:border-gray-500"
+                    : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 hover:border-gray-300"
+                  }
+                `}
+                placeholder="seo tools&#10;digital marketing&#10;content strategy"
+              />
+              {keywordValidation.issues.map((issue, i) => (
+                <p key={i} className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {issue}
+                </p>
+              ))}
             </div>
-            <textarea
-              rows={8}
-              value={keywordsText}
-              onChange={(e) => setKeywordsText(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="seo tools&#10;digital marketing&#10;content strategy"
-            />
-            {keywordValidation.issues.map((issue, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-red-600">
-                <AlertCircle className="w-4 h-4" />
-                <span>{issue}</span>
-              </div>
-            ))}
-          </div>
 
-          {/* Domains */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <Globe className="w-5 h-5 text-green-600" />
-                Domains
+            {/* Domains */}
+            <div className="space-y-2">
+              <label className="flex items-center justify-between">
+                <span className={`text-xs font-medium flex items-center gap-1.5 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
+                  <Globe className="w-3.5 h-3.5" />
+                  Domain
+                </span>
+                <span className="text-xs font-medium text-green-600 dark:text-green-400">{domains.length}</span>
               </label>
-              <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                {domains.length}
-              </span>
+              <textarea
+                rows={7}
+                value={domainsText}
+                onChange={(e) => setDomainsText(e.target.value)}
+                className={`
+                  w-full px-3.5 py-2.5 rounded-lg border
+                  text-sm transition-all duration-200 resize-none
+                  focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                  ${theme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 hover:border-gray-500"
+                    : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 hover:border-gray-300"
+                  }
+                `}
+                placeholder="example.com&#10;mydomain.vn&#10;yoursite.org"
+              />
+              {domainValidation.issues.map((issue, i) => (
+                <p key={i} className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {issue}
+                </p>
+              ))}
             </div>
-            <textarea
-              rows={8}
-              value={domainsText}
-              onChange={(e) => setDomainsText(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-              placeholder="example.com&#10;mydomain.vn&#10;yoursite.org"
-            />
-            {domainValidation.issues.map((issue, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-red-600">
-                <AlertCircle className="w-4 h-4" />
-                <span>{issue}</span>
-              </div>
-            ))}
           </div>
-        </div>
 
-        {/* Pair Validation */}
-        {pairValidation.issues.length > 0 && (
-          <div className="mb-6">
-            {pairValidation.issues.map((issue, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-red-600">
-                <AlertCircle className="w-4 h-4" />
-                <span>{issue}</span>
-              </div>
-            ))}
-          </div>
-        )}
+          {/* Validation Errors */}
+          {pairValidation.issues.length > 0 && (
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
+              theme === "dark"
+                ? "bg-amber-900/20 border border-amber-800"
+                : "bg-amber-50 border border-amber-200"
+            }`}>
+              <AlertCircle className={`w-4 h-4 flex-shrink-0 ${
+                theme === "dark" ? "text-amber-400" : "text-amber-600"
+              }`} />
+              <span className={`text-sm ${
+                theme === "dark" ? "text-amber-300" : "text-amber-800"
+              }`}>{pairValidation.issues[0]}</span>
+            </div>
+          )}
 
-        {/* Summary */}
-        {totalPairs > 0 && pairValidation.valid && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-                <Zap className="w-5 h-5 text-white" />
+          {/* Ready Summary - Compact Single Row */}
+          {totalPairs > 0 && pairValidation.valid && (
+            <div className={`flex items-center gap-4 px-4 py-3 rounded-lg border ${
+              theme === "dark"
+                ? "bg-linear-to-r from-blue-900/30 to-indigo-900/30 border-blue-800"
+                : "bg-linear-to-r from-blue-50 to-indigo-50 border-blue-100"
+            }`}>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500 text-white">
+                  <Zap className="w-3.5 h-3.5" />
+                </div>
+                <span className={`text-sm font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}>Sẵn sàng kiểm tra</span>
               </div>
-              <div>
-                <h4 className="font-semibold text-blue-900 text-md">Tổng quan kiểm tra</h4>
-                <div className="text-blue-600 mt-2 text-sm">
-                  <span><strong>{totalPairs}</strong> tác vụ • </span>
-                  <span><strong>{keywords.length}</strong> từ khóa • </span>
-                  <span><strong>{domains.length}</strong> website • </span>
-                  <span>Thiết bị: <strong>{selectedDevice?.label}</strong> • </span>
-                  <span>Khu vực: <strong>{selectedLocation?.label}</strong></span>
+
+              <div className="flex-1 flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <Type className={`w-3.5 h-3.5 ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`} />
+                  <span className={`text-xs ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Từ khóa:</span>
+                  <span className={`text-sm font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{keywords.length}</span>
+                </div>
+                <div className={`w-px h-4 ${theme === "dark" ? "bg-blue-700" : "bg-blue-200"}`}></div>
+                <div className="flex items-center gap-1.5">
+                  <Globe className={`w-3.5 h-3.5 ${theme === "dark" ? "text-green-400" : "text-green-600"}`} />
+                  <span className={`text-xs ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Domain:</span>
+                  <span className={`text-sm font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{domains.length}</span>
+                </div>
+                <div className={`w-px h-4 ${theme === "dark" ? "bg-blue-700" : "bg-blue-200"}`}></div>
+                <div className="flex items-center gap-1.5">
+                  <Zap className={`w-3.5 h-3.5 ${theme === "dark" ? "text-purple-400" : "text-purple-600"}`} />
+                  <span className={`text-xs ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Tác vụ:</span>
+                  <span className={`text-sm font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{totalPairs}</span>
+                </div>
+                <div className={`w-px h-4 ${theme === "dark" ? "bg-blue-700" : "bg-blue-200"}`}></div>
+                <div className="flex items-center gap-1.5">
+                  {selectedDevice && (
+                    <>
+                      <selectedDevice.icon className={`w-3.5 h-3.5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
+                      <span className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{selectedDevice.label}</span>
+                    </>
+                  )}
+                </div>
+                <div className={`w-px h-4 ${theme === "dark" ? "bg-blue-700" : "bg-blue-200"}`}></div>
+                <div className="flex items-center gap-1.5">
+                  <Globe className={`w-3.5 h-3.5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
+                  <span className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{selectedLocation?.label}</span>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Submit */}
-        <button
-          onClick={handleSubmit}
-          disabled={submitting || !canSubmit}
-          className={`w-full px-8 py-3 rounded-xl font-semibold text-lg transition-all ${
-            submitting || !canSubmit
-              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-95"
-          }`}
-        >
-          {submitting ? (
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Đang khởi tạo...
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-3">
-              <Power className="w-5 h-5" />
-              Bắt đầu kiểm tra ({totalPairs})
-            </div>
           )}
-        </button>
+
+          {/* Submit Button */}
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !canSubmit}
+            className={`
+              w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg
+              font-medium text-sm transition-all duration-200
+              ${submitting || !canSubmit
+                ? theme === "dark"
+                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md active:scale-[0.98]"
+              }
+            `}
+          >
+            {submitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Đang khởi tạo...</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                <span>Bắt đầu kiểm tra ({totalPairs})</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
