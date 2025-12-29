@@ -237,6 +237,50 @@ Backend đã được cấu hình chạy trên port **8001** để tránh confli
 2. Sửa upstream port trong `nginx.conf` (dòng 4)
 3. Restart cả backend và nginx
 
+### Database locked error (SQLite):
+
+**Triệu chứng:**
+```
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) database is locked
+[SQL: DELETE FROM templates WHERE templates.id = ?]
+```
+
+**Nguyên nhân:** SQLite không hỗ trợ tốt multiple processes (Gunicorn workers) cùng ghi database.
+
+**Giải pháp:** Chạy script tự động fix:
+
+```bash
+cd /var/www/ranking-checker
+chmod +x fix-gunicorn-sqlite.sh
+./fix-gunicorn-sqlite.sh
+```
+
+Script này sẽ:
+- Thay đổi Gunicorn từ multiple workers sang 1 worker với 4 threads
+- Threads an toàn với SQLite, processes thì không
+- Vẫn xử lý được multiple concurrent requests
+
+**Kiểm tra sau khi fix:**
+```bash
+# Check service đang chạy với bao nhiêu workers
+sudo systemctl status ranking-backend
+
+# Test template deletion
+curl -X DELETE https://ranking.aeseo1.org/api/templates/[ID]
+```
+
+**Giải pháp dài hạn (nếu cần scale lớn):**
+Nếu cần nhiều workers để handle traffic cao, migrate sang PostgreSQL:
+```bash
+# Install PostgreSQL
+sudo apt install postgresql postgresql-contrib
+
+# Update requirements.txt
+pip install psycopg2-binary
+
+# Update SQLALCHEMY_DATABASE_URI trong app.py
+```
+
 ### CORS errors:
 
 Kiểm tra file `backend/app.py` dòng 66-79 - đảm bảo domain đã được thêm vào allowed origins.
