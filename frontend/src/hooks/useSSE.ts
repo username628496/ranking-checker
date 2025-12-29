@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+// API base URL
+const API_BASE = import.meta.env.PROD
+  ? "https://ranking.aeseo1.org/api"
+  : "http://localhost:8001/api";
+
 export type RankResult = {
   keyword: string;
   domain: string;
@@ -24,7 +29,7 @@ export function useSSE(sessionId: string | null, opts?: { autoClear?: boolean })
 
   const url = useMemo(() => {
     if (!sessionId) return null;
-    return `/api/stream?session_id=${encodeURIComponent(sessionId)}`;
+    return `${API_BASE}/stream?session_id=${encodeURIComponent(sessionId)}`;
   }, [sessionId]);
 
   const cancel = () => {
