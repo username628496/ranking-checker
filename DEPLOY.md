@@ -237,36 +237,74 @@ Backend đã được cấu hình chạy trên port **8001** để tránh confli
 2. Sửa upstream port trong `nginx.conf` (dòng 4)
 3. Restart cả backend và nginx
 
-### Database locked error (SQLite):
+### Database errors (SQLite):
 
-**Triệu chứng:**
+**Triệu chứng 1: Database locked**
 ```
 sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) database is locked
 [SQL: DELETE FROM templates WHERE templates.id = ?]
 ```
 
-**Nguyên nhân:** SQLite không hỗ trợ tốt multiple processes (Gunicorn workers) cùng ghi database.
+**Triệu chứng 2: Readonly database**
+```
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) attempt to write a readonly database
+```
 
-**Giải pháp:** Chạy script tự động fix:
+**Triệu chứng 3: Service failed - log directory not found**
+```
+Error: Error: '/var/log/ranking-checker/backend-error.log' isn't writable
+[FileNotFoundError(2, 'No such file or directory')]
+```
+
+**Nguyên nhân:**
+1. SQLite không hỗ trợ tốt multiple processes (Gunicorn workers)
+2. Database file không có permissions đúng (www-data cần read/write)
+3. Log directory chưa được tạo
+
+**Giải pháp tổng hợp - Chạy script tự động fix:**
 
 ```bash
 cd /var/www/ranking-checker
-chmod +x fix-gunicorn-sqlite.sh
-./fix-gunicorn-sqlite.sh
+git pull origin main
+chmod +x fix-vps-issues.sh
+./fix-vps-issues.sh
 ```
 
-Script này sẽ:
+Script này sẽ tự động:
+- Tạo log directory `/var/log/ranking-checker/` với permissions đúng
+- Fix permissions cho `backend/instance/` và `templates.db`
+- Đổi owner sang `www-data:www-data` cho toàn bộ backend
 - Thay đổi Gunicorn từ multiple workers sang 1 worker với 4 threads
-- Threads an toàn với SQLite, processes thì không
-- Vẫn xử lý được multiple concurrent requests
+- Restart service và check status
 
 **Kiểm tra sau khi fix:**
 ```bash
-# Check service đang chạy với bao nhiêu workers
+# Check service status
 sudo systemctl status ranking-backend
 
-# Test template deletion
+# Check logs có chạy không
+sudo tail -f /var/log/ranking-checker/backend.log
+
+# Test API
+curl https://ranking.aeseo1.org/api/templates
+
+# Test template deletion (thay [ID] bằng ID thật)
 curl -X DELETE https://ranking.aeseo1.org/api/templates/[ID]
+```
+
+**Manual fix nếu script không chạy được:**
+```bash
+# Tạo log directory
+sudo mkdir -p /var/log/ranking-checker
+sudo chown www-data:www-data /var/log/ranking-checker
+
+# Fix database permissions
+cd /var/www/ranking-checker/backend
+sudo chown -R www-data:www-data instance
+sudo chmod 664 instance/templates.db
+
+# Restart service
+sudo systemctl restart ranking-backend
 ```
 
 **Giải pháp dài hạn (nếu cần scale lớn):**
