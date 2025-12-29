@@ -20,7 +20,10 @@ export async function createTemplate(data: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Không thể tạo template");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Không thể tạo template");
+  }
   return res.json();
 }
 
@@ -34,7 +37,10 @@ export async function updateTemplate(id: number, data: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Không thể cập nhật template");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Không thể cập nhật template");
+  }
   return res.json();
 }
 
@@ -42,7 +48,10 @@ export async function deleteTemplate(id: number) {
   const res = await fetch(`${API_BASE}/templates/${id}`, {
     method: "DELETE",
   });
-  if (!res.ok) throw new Error("Không thể xóa template");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Không thể xóa template");
+  }
   return res.json();
 }
 

@@ -464,9 +464,9 @@ def get_templates():
             "id": t.id,
             "user_name": t.user_name,
             "name": t.name,
-            "keywords": t.keywords.split("\n"),
-            "domains": t.domains.split("\n"),
-            "created_at": t.created_at.isoformat()
+            "keywords": [k.strip() for k in t.keywords.split("\n") if k.strip()],
+            "domains": [d.strip() for d in t.domains.split("\n") if d.strip()],
+            "created_at": t.created_at.isoformat() if t.created_at else None
         } for t in templates
     ])
 
@@ -475,26 +475,65 @@ def create_template():
     data = request.json
     if not data.get("user_name") or not data.get("name"):
         return jsonify({"error": "Thiếu user_name hoặc name"}), 400
-    
+
+    # Filter out empty strings from keywords and domains
+    keywords = [k.strip() for k in data.get("keywords", []) if k.strip()]
+    domains = [d.strip() for d in data.get("domains", []) if d.strip()]
+
     template = Template(
-        user_name=data["user_name"],
-        name=data["name"],
-        keywords="\n".join(data.get("keywords", [])),
-        domains="\n".join(data.get("domains", [])),
+        user_name=data["user_name"].strip(),
+        name=data["name"].strip(),
+        keywords="\n".join(keywords),
+        domains="\n".join(domains),
     )
     db.session.add(template)
     db.session.commit()
-    return jsonify({"message": "Tạo template thành công", "id": template.id})
+
+    # Return the created template with full data
+    return jsonify({
+        "message": "Tạo template thành công",
+        "id": template.id,
+        "template": {
+            "id": template.id,
+            "user_name": template.user_name,
+            "name": template.name,
+            "keywords": keywords,
+            "domains": domains,
+            "created_at": template.created_at.isoformat() if template.created_at else None
+        }
+    }), 201
 
 @app.route("/api/templates/<int:template_id>", methods=["PUT"])
 def update_template(template_id):
     data = request.json
     template = Template.query.get_or_404(template_id)
-    template.name = data.get("name", template.name)
-    template.keywords = "\n".join(data.get("keywords", []))
-    template.domains = "\n".join(data.get("domains", []))
+
+    # Update fields if provided
+    if "name" in data:
+        template.name = data["name"].strip()
+
+    if "keywords" in data:
+        keywords = [k.strip() for k in data.get("keywords", []) if k.strip()]
+        template.keywords = "\n".join(keywords)
+
+    if "domains" in data:
+        domains = [d.strip() for d in data.get("domains", []) if d.strip()]
+        template.domains = "\n".join(domains)
+
     db.session.commit()
-    return jsonify({"message": "Cập nhật thành công"})
+
+    # Return updated template data
+    return jsonify({
+        "message": "Cập nhật thành công",
+        "template": {
+            "id": template.id,
+            "user_name": template.user_name,
+            "name": template.name,
+            "keywords": [k.strip() for k in template.keywords.split("\n") if k.strip()],
+            "domains": [d.strip() for d in template.domains.split("\n") if d.strip()],
+            "created_at": template.created_at.isoformat() if template.created_at else None
+        }
+    })
 
 @app.route("/api/templates/<int:template_id>", methods=["DELETE"])
 def delete_template(template_id):
