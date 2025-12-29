@@ -27,9 +27,9 @@ from models.monthly_snapshot import MonthlySnapshot
 try:
     from dotenv import load_dotenv
     load_dotenv()
-    print("✅ Environment loaded")
+    print("Environment loaded")
 except Exception:
-    print("⚠️  python-dotenv not found")
+    print("python-dotenv not found")
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(16))
@@ -60,7 +60,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = Config.SECRET_KEY
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///templates.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-print(f"📦 Using database at: {app.config['SQLALCHEMY_DATABASE_URI']}")  # ✅ thêm dòng này
+print(f"Using database at: {app.config['SQLALCHEMY_DATABASE_URI']}")  # thêm dòng này
 
 # CORS configuration for production
 if Config.ENVIRONMENT == "production":
@@ -279,7 +279,7 @@ def process_pair(keyword: str, domain_input: str, location: str, device: str) ->
         organic = serper_search(keyword, location, device, max_results=100)
 
         # Log target domain info
-        logger.info(f"🎯 Searching for: {keyword} | Target: {final_host} | Chain: {chain_hosts}")
+        logger.info(f"Searching for: {keyword} | Target: {final_host} | Chain: {chain_hosts}")
 
         matched = False
         ranking_host = None  # Store the actual ranking host
@@ -311,7 +311,7 @@ def process_pair(keyword: str, domain_input: str, location: str, device: str) ->
                 out["url"] = link[:200]
                 ranking_host = h  # Save the actual ranking host
                 matched = True
-                logger.info(f"✅ Found match: {keyword} | {h} == {final_host} at position {position}")
+                logger.info(f"Found match: {keyword} | {h} == {final_host} at position {position}")
                 break
 
             # Nếu trong top 20 mà chưa match, thử follow redirect
@@ -328,7 +328,7 @@ def process_pair(keyword: str, domain_input: str, location: str, device: str) ->
                     out["url"] = link[:200]
                     ranking_host = h  # Save the SERP ranking host (the one that appears in Google results)
                     matched = True
-                    logger.info(f"✅ Found match (via redirect): {keyword} | {fh} at position {position}")
+                    logger.info(f"Found match (via redirect): {keyword} | {fh} at position {position}")
                     break
 
         # Add ranking_host to output
@@ -338,13 +338,13 @@ def process_pair(keyword: str, domain_input: str, location: str, device: str) ->
         if not matched:
             out["position"] = "N/A"
             out["url"] = "-"
-            logger.warning(f"❌ No match found: {keyword} | {final_host} | Chain: {chain_hosts} | Checked {len(organic)} results")
+            logger.warning(f"No match found: {keyword} | {final_host} | Chain: {chain_hosts} | Checked {len(organic)} results")
 
     except Exception as e:
         logger.warning(f"process_pair error: {keyword} | {domain_input} | {e}")
         out["error"] = "Processing failed"
 
-    # ✅ Ghi lịch sử vào DB (với context Flask)
+    # Ghi lịch sử vào DB (với context Flask)
     try:
         with app.app_context():
             pos = None
@@ -366,9 +366,9 @@ def process_pair(keyword: str, domain_input: str, location: str, device: str) ->
 
             db.session.add(history)
             db.session.commit()
-            logger.info(f"💾 Lưu lịch sử: {keyword} | {domain_input} | {pos}")
+            logger.info(f"Lưu lịch sử: {keyword} | {domain_input} | {pos}")
     except Exception as e:
-        logger.warning(f"❌ Không thể lưu lịch sử: {e}")
+        logger.warning(f"Không thể lưu lịch sử: {e}")
 
     return out
 
@@ -760,7 +760,7 @@ def create_monthly_snapshots():
     Create snapshots for all trackings for the previous month.
     Runs on the 1st day of each month at 00:05 AM.
     """
-    logger.info("📸 Creating monthly snapshots...")
+    logger.info("Creating monthly snapshots...")
 
     with app.app_context():
         try:
@@ -777,7 +777,7 @@ def create_monthly_snapshots():
 
             # Get all active trackings
             trackings = KeywordTracking.query.filter_by(is_active=True).all()
-            logger.info(f"📋 Creating snapshots for {len(trackings)} trackings for {prev_year}/{prev_month}")
+            logger.info(f"Creating snapshots for {len(trackings)} trackings for {prev_year}/{prev_month}")
 
             created_count = 0
 
@@ -810,7 +810,7 @@ def create_monthly_snapshots():
                     ).order_by(RankHistory.checked_at.asc()).all()
 
                     if not history:
-                        logger.info(f"⚠️  No history data for {tracking.keyword} | {tracking.domain} in {prev_year}/{prev_month}")
+                        logger.info(f"No history data for {tracking.keyword} | {tracking.domain} in {prev_year}/{prev_month}")
                         continue
 
                     # Build daily data array
@@ -832,17 +832,17 @@ def create_monthly_snapshots():
 
                     db.session.add(snapshot)
                     created_count += 1
-                    logger.info(f"✅ Created snapshot: {tracking.keyword} | {tracking.domain} ({len(daily_data)} days)")
+                    logger.info(f"Created snapshot: {tracking.keyword} | {tracking.domain} ({len(daily_data)} days)")
 
                 except Exception as e:
-                    logger.error(f"❌ Failed to create snapshot for {tracking.keyword} | {tracking.domain}: {e}")
+                    logger.error(f"Failed to create snapshot for {tracking.keyword} | {tracking.domain}: {e}")
                     db.session.rollback()
 
             db.session.commit()
-            logger.info(f"🎉 Monthly snapshot creation completed: {created_count} snapshots created")
+            logger.info(f"Monthly snapshot creation completed: {created_count} snapshots created")
 
         except Exception as e:
-            logger.error(f"❌ Monthly snapshot job error: {e}")
+            logger.error(f"Monthly snapshot job error: {e}")
 
 # ------------------ CRON JOB: AUTO-CHECK TRACKING ------------------
 def auto_check_trackings():
@@ -850,7 +850,7 @@ def auto_check_trackings():
     Background job to automatically check all active trackings.
     Runs daily at 11:00 AM Vietnam time.
     """
-    logger.info("🕐 Auto-check job started")
+    logger.info("Auto-check job started")
 
     with app.app_context():
         try:
@@ -867,7 +867,7 @@ def auto_check_trackings():
                 KeywordTracking.next_check_date <= now_utc
             ).all()
 
-            logger.info(f"📋 Found {len(trackings)} trackings to check")
+            logger.info(f"Found {len(trackings)} trackings to check")
 
             checked_count = 0
             failed_count = 0
@@ -878,7 +878,7 @@ def auto_check_trackings():
 
             for tracking in trackings:
                 try:
-                    logger.info(f"🔍 Checking: {tracking.keyword} | {tracking.domain}")
+                    logger.info(f"Checking: {tracking.keyword} | {tracking.domain}")
 
                     # Perform the ranking check
                     result = process_pair(
@@ -914,17 +914,17 @@ def auto_check_trackings():
                     db.session.commit()
                     checked_count += 1
 
-                    logger.info(f"✅ Success: {tracking.keyword} | Position: {result.get('position', 'N/A')}")
+                    logger.info(f"Success: {tracking.keyword} | Position: {result.get('position', 'N/A')}")
 
                 except Exception as e:
                     failed_count += 1
-                    logger.error(f"❌ Auto-check failed for {tracking.keyword} | {tracking.domain}: {e}")
+                    logger.error(f"Auto-check failed for {tracking.keyword} | {tracking.domain}: {e}")
                     db.session.rollback()
 
-            logger.info(f"🎉 Auto-check completed: {checked_count} succeeded, {failed_count} failed")
+            logger.info(f"Auto-check completed: {checked_count} succeeded, {failed_count} failed")
 
         except Exception as e:
-            logger.error(f"❌ Auto-check job error: {e}")
+            logger.error(f"Auto-check job error: {e}")
 
 # Initialize scheduler
 scheduler = BackgroundScheduler(timezone=pytz.timezone('Asia/Ho_Chi_Minh'))
@@ -954,17 +954,17 @@ scheduler.add_job(
 
 # ------------------ MAIN ------------------
 if __name__ == "__main__":
-    print(f"🔑 API Key: {'✅ Set' if Config.SERPER_API_KEY else '❌ Missing'}")
+    print(f"API Key: {'Set' if Config.SERPER_API_KEY else 'Missing'}")
 
     # Start scheduler
     try:
         scheduler.start()
-        logger.info("⏰ Scheduler started - Auto-check will run daily at 11:00 AM Vietnam time")
+        logger.info("Scheduler started - Auto-check will run daily at 11:00 AM Vietnam time")
     except Exception as e:
-        logger.error(f"❌ Failed to start scheduler: {e}")
+        logger.error(f"Failed to start scheduler: {e}")
 
     try:
         app.run(host="0.0.0.0", port=8001, debug=False, threaded=True)
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
-        logger.info("🛑 Scheduler stopped")
+        logger.info("Scheduler stopped")

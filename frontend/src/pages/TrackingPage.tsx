@@ -298,7 +298,7 @@ export default function TrackingPage() {
 
     // Done
     if (importErrors.length === 0) {
-      alert(`✅ Đã thêm thành công ${successCount}/${pairs.length} tracking!`);
+      alert(`Đã thêm thành công ${successCount}/${pairs.length} tracking!`);
       setShowBulkModal(false);
       resetBulkForm();
       loadTrackings();
@@ -445,7 +445,7 @@ export default function TrackingPage() {
       return;
     }
 
-    if (!confirm(`⚠️ XÁC NHẬN XÓA ${selectedIds.size} TRACKING?\n\nHành động này không thể hoàn tác!`)) return;
+    if (!confirm(`XÁC NHẬN XÓA ${selectedIds.size} TRACKING?\n\nHành động này không thể hoàn tác!`)) return;
 
     setBulkActionLoading(true);
     let successCount = 0;

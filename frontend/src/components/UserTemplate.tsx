@@ -47,13 +47,8 @@ export default function UserTemplate({ onUseTemplate }: Props) {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
   async function loadTemplates() {
-    try {
-      const data = await fetchTemplates();
-      setTemplates(data);
-    } catch (error) {
-      console.error("Error loading templates:", error);
-      alert("Không thể tải danh sách template. Vui lòng thử lại.");
-    }
+    const data = await fetchTemplates();
+    setTemplates(data);
   }
 
   useEffect(() => {
@@ -61,43 +56,24 @@ export default function UserTemplate({ onUseTemplate }: Props) {
   }, []);
 
   async function handleSave() {
-    if (!userName || !name) {
-      alert("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    const keywordList = keywords.split("\n").map((s) => s.trim()).filter(Boolean);
-    const domainList = domains.split("\n").map((s) => s.trim()).filter(Boolean);
-
-    if (keywordList.length === 0 || domainList.length === 0) {
-      alert("Vui lòng nhập ít nhất 1 keyword và 1 domain");
-      return;
-    }
+    if (!userName || !name) return alert("Vui lòng nhập đầy đủ thông tin");
 
     const payload = {
       user_name: userName,
       name,
-      keywords: keywordList,
-      domains: domainList,
+      keywords: keywords.split("\n").map((s) => s.trim()).filter(Boolean),
+      domains: domains.split("\n").map((s) => s.trim()).filter(Boolean),
     };
 
-    try {
-      if (editId) {
-        await updateTemplate(editId, payload);
-        setEditId(null);
-        setCopyFeedback("✅ Đã cập nhật template");
-      } else {
-        await createTemplate(payload);
-        setCopyFeedback("✅ Đã tạo template mới");
-      }
-
-      resetForm();
-      await loadTemplates();
-      setTimeout(() => setCopyFeedback(null), 2000);
-    } catch (error) {
-      console.error("Error saving template:", error);
-      alert(error instanceof Error ? error.message : "Không thể lưu template. Vui lòng thử lại.");
+    if (editId) {
+      await updateTemplate(editId, payload);
+      setEditId(null);
+    } else {
+      await createTemplate(payload);
     }
+
+    resetForm();
+    loadTemplates();
   }
 
   function resetForm() {
@@ -120,18 +96,9 @@ export default function UserTemplate({ onUseTemplate }: Props) {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Bạn có chắc muốn xoá template này?")) {
-      return;
-    }
-
-    try {
+    if (confirm("Bạn có chắc muốn xoá template này?")) {
       await deleteTemplate(id);
-      setCopyFeedback("✅ Đã xóa template");
-      await loadTemplates();
-      setTimeout(() => setCopyFeedback(null), 2000);
-    } catch (error) {
-      console.error("Error deleting template:", error);
-      alert(error instanceof Error ? error.message : "Không thể xóa template. Vui lòng thử lại.");
+      loadTemplates();
     }
   }
 

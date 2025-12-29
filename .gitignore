@@ -60,3 +60,4 @@ logs/
 # Build artifacts
 frontend/dist/
 frontend/build/
+*.bak
