@@ -11,6 +11,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+// API base URL
+const API_BASE = import.meta.env.PROD
+  ? "https://ranking.aeseo1.org/api"
+  : "http://localhost:8001/api";
+
 type Props = {
   onStart: (p: {
     sessionId: string;
@@ -120,7 +125,7 @@ export default function Form({ onStart, onError, initialKeywords, initialDomains
       fd.set("device", device);
       fd.set("location", location);
 
-      const resp = await fetch("/api/stream/save", { method: "POST", body: fd });
+      const resp = await fetch(`${API_BASE}/stream/save`, { method: "POST", body: fd });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       if (!data?.session_id) throw new Error("Không nhận được session_id");
