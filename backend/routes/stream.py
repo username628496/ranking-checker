@@ -64,6 +64,9 @@ def save():
     if bad_dm:
         return jsonify({"error": f"Domain không hợp lệ (ví dụ): {bad_dm[0][:50]}"}), 400
 
+    # Get API key from request (optional)
+    api_key = form.get("api_key")
+
     # Generate session_id
     sid = f"session_{secrets.token_urlsafe(8)}_{int(time.time())}"
     SESSIONS[sid] = form
@@ -100,6 +103,7 @@ def stream():
         form = SESSIONS.get(sid) or {}
         device = form.get("device", "desktop")
         location = form.get("location", "vn")
+        api_key = form.get("api_key")  # Get API key from session
 
         # Parse keywords and domains
         kws = [s.strip() for s in unquote_plus(form.get("keywords", "")).splitlines() if s.strip()]
@@ -117,7 +121,8 @@ def stream():
                             k, d, location, device, sid, "single",
                             save_to_db=True,
                             db_session=db.session,
-                            rank_history_model=RankHistory
+                            rank_history_model=RankHistory,
+                            api_key=api_key
                         )
                         for k, d in batch
                     ]

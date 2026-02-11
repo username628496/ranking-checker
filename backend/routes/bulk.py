@@ -54,6 +54,7 @@ def bulk_check():
     location = data.get("location", "vn")
     device = data.get("device", "desktop")
     limit = int(data.get("limit", 30))
+    api_key = data.get("api_key")  # Get API key from request
 
     # Validate input
     if not keywords or not isinstance(keywords, list):
@@ -75,7 +76,7 @@ def bulk_check():
                 continue
 
             # Get top 30 results from Serper (fetch 50 to ensure we have enough after filtering)
-            organic = serper_search(keyword, location, device, max_results=50)
+            organic = serper_search(keyword, location, device, max_results=50, api_key=api_key)
 
             top_domains = []
 

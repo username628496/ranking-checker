@@ -9,7 +9,7 @@ import requests
 from config import Config, logger
 
 
-def serper_search(keyword: str, location: str, device: str, max_results: int = 30) -> List[Dict]:
+def serper_search(keyword: str, location: str, device: str, max_results: int = 30, api_key: str = None) -> List[Dict]:
     """
     Search Google via Serper API and fetch up to max_results
 
@@ -20,6 +20,7 @@ def serper_search(keyword: str, location: str, device: str, max_results: int = 3
         location: Location code (vn, hanoi, hochiminh, danang)
         device: Device type (desktop, mobile)
         max_results: Maximum number of results to fetch (default 30)
+        api_key: Optional Serper API key (fallback to Config.SERPER_API_KEY if not provided)
 
     Returns:
         List of organic search results with actualPosition field
@@ -31,7 +32,9 @@ def serper_search(keyword: str, location: str, device: str, max_results: int = 3
         results = serper_search("seo tools", "vn", "desktop", max_results=30)
         # Returns up to 30 organic results
     """
-    if not Config.SERPER_API_KEY:
+    # Use provided api_key or fallback to Config
+    serper_key = api_key or Config.SERPER_API_KEY
+    if not serper_key:
         raise ValueError("SERPER_API_KEY not configured")
 
     all_results = []
@@ -61,7 +64,7 @@ def serper_search(keyword: str, location: str, device: str, max_results: int = 3
             r = requests.post(
                 "https://google.serper.dev/search",
                 headers={
-                    "X-API-KEY": Config.SERPER_API_KEY,
+                    "X-API-KEY": serper_key,
                     "Content-Type": "application/json",
                     "User-Agent": Config.USER_AGENT
                 },

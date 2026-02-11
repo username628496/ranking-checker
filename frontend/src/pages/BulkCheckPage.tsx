@@ -181,12 +181,21 @@ export default function BulkCheckPage() {
     try {
       const timestamp = getCurrentVietnameseTimestamp();
 
+      // Get API key from localStorage
+      const apiKey = localStorage.getItem("serper_api_key");
+      if (!apiKey) {
+        setError("Please configure your Serper API key in Settings first");
+        setLoading(false);
+        return;
+      }
+
       // Call API once with all keywords (most efficient - saves credits)
       const response = await axios.post(API_ENDPOINTS.BULK_CHECK, {
         keywords: keywordList,
         location,
         device,
         limit: 30,
+        api_key: apiKey,
       });
 
       // Add timestamp to each result

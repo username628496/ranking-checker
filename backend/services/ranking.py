@@ -19,7 +19,8 @@ def process_pair(
     check_type: str = "single",
     save_to_db: bool = True,
     db_session=None,
-    rank_history_model=None
+    rank_history_model=None,
+    api_key: str = None
 ) -> Dict:
     """
     Process one keyword-domain pair and detect ranking
@@ -74,7 +75,7 @@ def process_pair(
         out["redirect_chain"] = chain_hosts[:10]
 
         # Step 3: Search Serper API for top 30 results
-        organic = serper_search(keyword, location, device, max_results=30)
+        organic = serper_search(keyword, location, device, max_results=30, api_key=api_key)
 
         # Log target domain info
         logger.info(f"Searching for: {keyword} | Target: {final_host} | Chain: {chain_hosts}")

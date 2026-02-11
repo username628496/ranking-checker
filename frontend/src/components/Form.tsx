@@ -117,6 +117,13 @@ export default function Form({ onStart, onError, initialKeywords, initialDomains
 
     const cleanedDomains = domains.map(normalizeDomain);
 
+    // Get API key from localStorage
+    const apiKey = localStorage.getItem("serper_api_key");
+    if (!apiKey) {
+      onError("Please configure your Serper API key in Settings first");
+      return;
+    }
+
     try {
       setSubmitting(true);
       const fd = new FormData();
@@ -124,6 +131,7 @@ export default function Form({ onStart, onError, initialKeywords, initialDomains
       fd.set("domains", cleanedDomains.join("\n"));
       fd.set("device", device);
       fd.set("location", location);
+      fd.set("api_key", apiKey);
 
       const resp = await fetch(API_ENDPOINTS.STREAM_SAVE, { method: "POST", body: fd });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
