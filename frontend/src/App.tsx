@@ -1,242 +1,196 @@
-import { useMemo, useState } from "react";
-import Form from "@components/Form";
-import ProgressBar from "@components/ProgressBar";
-import ResultTable from "@components/ResultTable";
-import UserTemplate from "@components/UserTemplate";
-import TopHighlights from "@components/TopHighlights";
-import { useSSE, type RankResult } from "@hooks/useSSE";
-import { useTheme } from "@contexts/ThemeContext";
-import {
-  ShieldCheck,
-  AlertTriangle,
-  Sun,
-  Moon
-} from "lucide-react";
+import { useState } from "react";
+import { Home, TrendingUp, Settings, ClipboardList } from "lucide-react";
+import { AppShell, Burger, NavLink, Stack, Group, Box, Tooltip } from "@mantine/core";
+import { ErrorBoundary } from "@components/ErrorBoundary";
+import SingleCheckPage from "./pages/SingleCheckPage";
+import BulkCheckPage from "./pages/BulkCheckPage";
+import ApiSettingsPage from "./pages/ApiSettingsPage";
+import HistoryPage from "./pages/HistoryPage";
 
 export default function App() {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [expectedTotal, setExpectedTotal] = useState<number>(0);
-  const [templateData, setTemplateData] = useState<{ keywords: string; domains: string } | null>(null);
-  const { theme, toggleTheme } = useTheme();
-
-  const { results, error, status, setResults, setError, cancel } = useSSE(sessionId, {
-    autoClear: true,
-  });
-
-  const done = results.length;
-  const current = results.length ? results[results.length - 1] : null;
-
-  // Sửa lại logic để hiển thị top 10 (thay vì 6)
-  const topHighlights = useMemo(
-    () =>
-      results.filter((r) =>
-        typeof r.position === "number"
-          ? r.position <= 10
-          : Number(r.position) <= 10
-      ),
-    [results]
-  );
-
-  function handleStart(p: {
-    sessionId: string;
-    total: number;
-    keywords: string[];
-    domains: string[];
-  }) {
-    cancel();
-    setSessionId(null);
-    setResults([]);
-    setError(null);
-    setExpectedTotal(p.total);
-    setSessionId(p.sessionId);
-  }
-
-  function handleUseTemplate(keywords: string, domains: string) {
-    setTemplateData({ keywords, domains });
-    // Reset after a short delay to allow Form to pick up the data
-    setTimeout(() => setTemplateData(null), 100);
-  }
-
-  // Background patterns
-  const getBackgroundStyle = () => {
-    if (theme === "dark") {
-      return {
-        backgroundImage: `
-          linear-gradient(rgba(55, 65, 81, 0.3) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(55, 65, 81, 0.3) 1px, transparent 1px)
-        `,
-        backgroundSize: '50px 50px',
-        backgroundColor: '#0f172a'
-      };
-    }
-    return {
-      backgroundImage: `
-        linear-gradient(rgba(229, 231, 235, 0.5) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(229, 231, 235, 0.5) 1px, transparent 1px)
-      `,
-      backgroundSize: '50px 50px',
-      backgroundColor: '#f8fafc'
-    };
-  };
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("single");
 
   return (
-    <div
-      className="min-h-screen transition-colors duration-200"
-      style={getBackgroundStyle()}
+    <AppShell
+      header={{ height: 0 }}
+      navbar={{
+        width: 64,
+        breakpoint: 'md',
+        collapsed: { mobile: !mobileMenuOpen },
+      }}
+      padding={0}
+      styles={{
+        main: {
+          height: '100vh',
+          overflow: 'hidden',
+        },
+      }}
     >
-      {/* Header */}
-      <header className="pt-8 pb-6">
-        {/* Top Badge */}
-        <div className="flex justify-center mb-4">
-          <div className={`inline-flex items-center gap-2 px-4 py-1.5 border rounded-full text-sm font-medium shadow-sm ${
-            theme === "dark"
-              ? "border-blue-700 bg-blue-900/50 text-blue-300"
-              : "border-blue-200 bg-blue-50 text-blue-700"
-          }`}>
-            <ShieldCheck size={16} className={theme === "dark" ? "text-blue-400" : "text-blue-600"} />
-            <span>AE SEO1</span>
-          </div>
-        </div>
+      <AppShell.Navbar p={0} withBorder>
+        {/* Logo/Title */}
+        <AppShell.Section p="sm" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
+          <Group justify="center">
+            <Box
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '0.5rem',
+                backgroundColor: 'var(--mantine-color-blue-6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Home size={16} color="white" />
+            </Box>
+          </Group>
+        </AppShell.Section>
 
-        {/* Main Content */}
-        <div className="text-center space-y-2">
-          <h1 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            Công cụ kiểm tra <span className="text-blue-600">Ranking Google</span>
-          </h1>
-          <p className={`text-sm max-w-2xl mx-auto ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-            Kiểm tra thứ hạng từ khóa trên Google trong vài giây
-          </p>
-        </div>
-
-        {/* Theme Toggle */}
-        <div className="flex justify-center mt-5">
-          <button
-            onClick={toggleTheme}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium border rounded-lg transition-all ${
-              theme === "dark"
-                ? "border-gray-700 bg-gray-800 text-gray-200 hover:bg-gray-700"
-                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            {theme === "dark" ? (
-              <>
-                <Sun size={16} />
-                <span>Light Mode</span>
-              </>
-            ) : (
-              <>
-                <Moon size={16} />
-                <span>Dark Mode</span>
-              </>
-            )}
-          </button>
-        </div>
-      </header>
-
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-          <>
-            {/* Form */}
-            <div className={`rounded-xl backdrop-blur-sm border shadow-sm overflow-hidden ${
-              theme === "dark"
-                ? "bg-gray-800/50 border-gray-700/50"
-                : "bg-white/50 border-gray-200/50"
-            }`}>
-              <Form
-                onStart={handleStart}
-                onError={(msg) => setError(msg)}
-                initialKeywords={templateData?.keywords}
-                initialDomains={templateData?.domains}
+        {/* Navigation */}
+        <AppShell.Section grow mt="xs" p="xs">
+          <Stack gap={4}>
+            <Tooltip label="Home" position="right">
+              <NavLink
+                leftSection={<Home size={18} />}
+                active={activeTab === "single"}
+                onClick={() => {
+                  setActiveTab("single");
+                  setMobileMenuOpen(false);
+                }}
+                styles={{
+                  root: {
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                  },
+                  label: {
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                  },
+                }}
               />
-            </div>
+            </Tooltip>
 
-            {/* Progress */}
-            {(expectedTotal > 0 || results.length > 0) && (
-              <div className={`rounded-xl backdrop-blur-sm border shadow-sm overflow-hidden ${
-                theme === "dark"
-                  ? "bg-gray-800/50 border-gray-700/50"
-                  : "bg-white/50 border-gray-200/50"
-              }`}>
-                <ProgressBar
-                  done={done}
-                  total={expectedTotal || done}
-                  current={current ? { keyword: current.keyword, domain: current.domain } : null}
-                  statusText={
-                    status === "error"
-                      ? `Lỗi: ${error}`
-                      : status === "ended"
-                      ? "Hoàn thành"
-                      : status === "streaming"
-                      ? "Đang kiểm tra..."
-                      : "Đang chuẩn bị..."
-                  }
-                  ended={status === "ended"}
-                />
-              </div>
-            )}
+            <Tooltip label="30 Ranking" position="right">
+              <NavLink
+                leftSection={<TrendingUp size={18} />}
+                active={activeTab === "bulk"}
+                onClick={() => {
+                  setActiveTab("bulk");
+                  setMobileMenuOpen(false);
+                }}
+                styles={{
+                  root: {
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                  },
+                  label: {
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                  },
+                }}
+              />
+            </Tooltip>
 
-            {/* Error */}
-            {status === "error" && (
-              <div className={`rounded-xl border shadow-sm p-4 ${
-                theme === "dark"
-                  ? "bg-red-900/20 border-red-800"
-                  : "bg-red-50 border-red-200"
-              }`}>
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className={`w-5 h-5 flex-shrink-0 ${
-                    theme === "dark" ? "text-red-400" : "text-red-600"
-                  }`} />
-                  <div>
-                    <h3 className={`font-bold ${
-                      theme === "dark" ? "text-red-300" : "text-red-900"
-                    }`}>Có lỗi xảy ra</h3>
-                    <div className={`text-sm mt-1 ${
-                      theme === "dark" ? "text-red-400" : "text-red-700"
-                    }`}>{error}</div>
-                  </div>
-                </div>
-              </div>
-            )}
+            <Tooltip label="Settings" position="right">
+              <NavLink
+                leftSection={<Settings size={18} />}
+                active={activeTab === "settings"}
+                onClick={() => {
+                  setActiveTab("settings");
+                  setMobileMenuOpen(false);
+                }}
+                styles={{
+                  root: {
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                  },
+                  label: {
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                  },
+                }}
+              />
+            </Tooltip>
 
-            {/* Top Results */}
-            <div className={`rounded-xl backdrop-blur-sm border shadow-sm overflow-hidden ${
-              theme === "dark"
-                ? "bg-gray-800/50 border-gray-700/50"
-                : "bg-white/50 border-gray-200/50"
-            }`}>
-              <TopHighlights topHighlights={topHighlights} />
-            </div>
+            <Tooltip label="History" position="right">
+              <NavLink
+                leftSection={<ClipboardList size={18} />}
+                active={activeTab === "history"}
+                onClick={() => {
+                  setActiveTab("history");
+                  setMobileMenuOpen(false);
+                }}
+                styles={{
+                  root: {
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                  },
+                  label: {
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                  },
+                }}
+              />
+            </Tooltip>
+          </Stack>
+        </AppShell.Section>
+      </AppShell.Navbar>
 
-            {/* Results Table */}
-            <div className={`rounded-xl backdrop-blur-sm border shadow-sm overflow-hidden ${
-              theme === "dark"
-                ? "bg-gray-800/50 border-gray-700/50"
-                : "bg-white/50 border-gray-200/50"
-            }`}>
-              <ResultTable results={results as RankResult[]} />
-            </div>
+      {/* Mobile Menu Button */}
+      <Burger
+        opened={mobileMenuOpen}
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        hiddenFrom="md"
+        size="sm"
+        style={{
+          position: 'fixed',
+          left: 16,
+          top: 16,
+          zIndex: 100,
+        }}
+      />
 
-            {/* User Template */}
-            <div className={`rounded-xl backdrop-blur-sm border shadow-sm overflow-hidden ${
-              theme === "dark"
-                ? "bg-gray-800/50 border-gray-700/50"
-                : "bg-white/50 border-gray-200/50"
-            }`}>
-              <UserTemplate onUseTemplate={handleUseTemplate} />
-            </div>
-          </>
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <Box
+          onClick={() => setMobileMenuOpen(false)}
+          hiddenFrom="md"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 40,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+        />
+      )}
 
-        {/* Footer */}
-        <footer className="a">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className={`flex items-center justify-center gap-2 text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}>
-              <ShieldCheck size={18} className="text-green-600" />
-              <span>Hello World © 2025</span>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </div>
+      {/* Main Content Area */}
+      <AppShell.Main style={{ height: '100vh', overflow: 'hidden' }}>
+        <Box style={{ height: '100%', overflow: 'auto' }}>
+          {activeTab === "single" && (
+            <ErrorBoundary fallbackTitle="Home Page Error">
+              <SingleCheckPage />
+            </ErrorBoundary>
+          )}
+          {activeTab === "bulk" && (
+            <ErrorBoundary fallbackTitle="30 Ranking Page Error">
+              <BulkCheckPage />
+            </ErrorBoundary>
+          )}
+          {activeTab === "settings" && (
+            <ErrorBoundary fallbackTitle="Settings Page Error">
+              <ApiSettingsPage />
+            </ErrorBoundary>
+          )}
+          {activeTab === "history" && (
+            <ErrorBoundary fallbackTitle="History Page Error">
+              <HistoryPage />
+            </ErrorBoundary>
+          )}
+        </Box>
+      </AppShell.Main>
+    </AppShell>
   );
 }

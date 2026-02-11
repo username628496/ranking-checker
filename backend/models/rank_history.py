@@ -12,7 +12,9 @@ class RankHistory(db.Model):
     location = db.Column(db.String(50))
     device = db.Column(db.String(50))
     checked_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    session_id = db.Column(db.String(100))
+    session_id = db.Column(db.String(100), index=True)
+    check_type = db.Column(db.String(20), default="single")
+    api_credits_used = db.Column(db.Integer, default=1)
 
     def to_dict(self):
         return {

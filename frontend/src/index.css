@@ -1,30 +1,456 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Tracking Table Custom Styles */
-.tracking-table thead th {
-  background-color: oklch(var(--b2));
-  border-color: oklch(var(--bc) / 0.2);
+/* =========================================
+   PRO SEO SAAS THEME (Teal + Blue)
+   Clean • Modern • High-end • shadcn/ui v4
+========================================= */
+
+@theme {
+  /* ================= Base ================= */
+  --color-background: oklch(0.985 0.003 240);   /* soft slate */
+  --color-foreground: oklch(0.18 0.01 240);     /* near black */
+
+  --color-card: oklch(1 0 0);                   /* pure white */
+  --color-card-foreground: oklch(0.18 0.01 240);
+
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.18 0.01 240);
+
+  /* ================= Brand Colors ================= */
+  /* Primary = Vibrant Blue */
+  --color-primary: oklch(0.60 0.20 250);        /* vibrant blue */
+  --color-primary-foreground: oklch(1 0 0);
+  --color-primary-hover: oklch(0.55 0.22 250);
+  --color-primary-light: oklch(0.95 0.05 250);
+  --color-primary-border: oklch(0.87 0.10 250);
+
+  /* Accent = Purple Gradient */
+  --color-accent: oklch(0.62 0.20 290);         /* rich purple */
+  --color-accent-foreground: oklch(1 0 0);
+  --color-accent-hover: oklch(0.57 0.22 290);
+  --color-accent-light: oklch(0.95 0.05 290);
+  --color-accent-border: oklch(0.87 0.10 290);
+
+  /* Teal = Fresh Cyan */
+  --color-teal: oklch(0.65 0.16 190);           /* fresh teal */
+  --color-teal-foreground: oklch(1 0 0);
+  --color-teal-hover: oklch(0.60 0.18 190);
+  --color-teal-light: oklch(0.95 0.04 190);
+  --color-teal-border: oklch(0.88 0.08 190);
+
+  /* Orange = Warm Accent */
+  --color-orange: oklch(0.68 0.18 40);          /* warm orange */
+  --color-orange-foreground: oklch(1 0 0);
+  --color-orange-hover: oklch(0.63 0.20 40);
+  --color-orange-light: oklch(0.96 0.05 40);
+  --color-orange-border: oklch(0.88 0.10 40);
+
+  /* Pink = Energetic */
+  --color-pink: oklch(0.65 0.20 350);           /* energetic pink */
+  --color-pink-foreground: oklch(1 0 0);
+  --color-pink-hover: oklch(0.60 0.22 350);
+  --color-pink-light: oklch(0.96 0.05 350);
+  --color-pink-border: oklch(0.88 0.10 350);
+
+  /* ================= Neutral ================= */
+  --color-secondary: oklch(0.96 0.004 240);
+  --color-secondary-foreground: oklch(0.24 0.01 240);
+  --color-secondary-hover: oklch(0.94 0.006 240);
+
+  --color-muted: oklch(0.95 0.004 240);
+  --color-muted-foreground: oklch(0.55 0.01 240);
+
+  /* ================= States ================= */
+  --color-success: oklch(0.66 0.16 155);        /* vibrant green */
+  --color-success-foreground: oklch(1 0 0);
+  --color-success-light: oklch(0.96 0.05 155);
+  --color-success-border: oklch(0.88 0.10 155);
+  --color-success-hover: oklch(0.61 0.18 155);
+
+  --color-warning: oklch(0.72 0.16 75);         /* vibrant amber */
+  --color-warning-foreground: oklch(0.15 0.01 75);
+  --color-warning-light: oklch(0.96 0.05 75);
+  --color-warning-border: oklch(0.90 0.10 75);
+  --color-warning-hover: oklch(0.67 0.18 75);
+
+  --color-info: oklch(0.63 0.16 230);           /* vibrant sky blue */
+  --color-info-foreground: oklch(1 0 0);
+  --color-info-light: oklch(0.96 0.05 230);
+  --color-info-border: oklch(0.88 0.10 230);
+
+  --color-destructive: oklch(0.58 0.24 25);     /* vibrant red */
+  --color-destructive-foreground: oklch(1 0 0);
+  --color-destructive-light: oklch(0.96 0.05 25);
+  --color-destructive-border: oklch(0.87 0.12 25);
+  --color-destructive-hover: oklch(0.53 0.26 25);
+
+  /* ================= Ranking Colors ================= */
+  --color-rank-top: oklch(0.64 0.16 155);       /* green for top 1-10 */
+  --color-rank-top-light: oklch(0.96 0.04 155);
+  --color-rank-top-border: oklch(0.88 0.08 155);
+
+  --color-rank-mid: oklch(0.62 0.18 250);       /* blue for 11-20 */
+  --color-rank-mid-light: oklch(0.96 0.04 250);
+  --color-rank-mid-border: oklch(0.88 0.09 250);
+
+  --color-rank-low: oklch(0.70 0.16 75);        /* amber for 21-30 */
+  --color-rank-low-light: oklch(0.96 0.04 75);
+  --color-rank-low-border: oklch(0.90 0.09 75);
+
+  /* ================= UI ================= */
+  --color-border: oklch(0.92 0.004 240);
+  --color-input: oklch(0.92 0.004 240);
+  --color-ring: oklch(0.60 0.20 250);
+
+  --radius: 0.875rem;
 }
 
-.tracking-table tbody td {
-  border-color: oklch(var(--bc) / 0.1);
+/* ================= Global ================= */
+
+* {
+  border-color: var(--color-border);
 }
 
-.tracking-table tbody tr:hover {
-  background-color: oklch(var(--b2) / 0.5);
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.tracking-table .sticky-header {
-  background-color: oklch(var(--b2));
-  border-color: oklch(var(--bc) / 0.2);
+/* ================= Cards ================= */
+
+.card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.04),
+    0 8px 24px oklch(0 0 0 / 0.04);
 }
 
-.tracking-table .sticky-cell {
-  background-color: oklch(var(--b1));
-  border-color: oklch(var(--bc) / 0.2);
+/* ================= Buttons ================= */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: calc(var(--radius) - 0.125rem);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
 }
 
-.tracking-table .sticky-cell-shadow {
-  box-shadow: 2px 0 4px oklch(var(--bc) / 0.05);
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%);
+  color: var(--color-accent-foreground);
+}
+
+.btn-teal {
+  background-color: var(--color-teal);
+  color: var(--color-teal-foreground);
+}
+
+.btn-orange {
+  background-color: var(--color-orange);
+  color: var(--color-orange-foreground);
+}
+
+.btn-pink {
+  background-color: var(--color-pink);
+  color: var(--color-pink-foreground);
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 50%, var(--color-teal) 100%);
+  color: white;
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-secondary-foreground);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-hover);
+  border-color: oklch(0.88 0.006 240);
+}
+
+.btn-success {
+  background-color: var(--color-success);
+  color: var(--color-success-foreground);
+}
+
+.btn-destructive {
+  background-color: var(--color-destructive);
+  color: var(--color-destructive-foreground);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-muted);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-foreground);
+}
+
+.btn-ghost:hover {
+  background-color: var(--color-secondary);
+}
+
+/* ================= Inputs ================= */
+
+input,
+textarea,
+select {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-input);
+  border-radius: calc(var(--radius) - 0.125rem);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: oklch(0.88 0.006 240);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-ring);
+  box-shadow: 0 0 0 3px oklch(from var(--color-ring) l c h / 0.15);
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted-foreground);
+}
+
+/* ================= Badges ================= */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: calc(var(--radius) - 0.25rem);
+  transition: all 0.2s ease;
+}
+
+.badge-primary {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-border);
+}
+
+.badge-accent {
+  background-color: var(--color-accent-light);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-border);
+}
+
+.badge-teal {
+  background-color: var(--color-teal-light);
+  color: var(--color-teal);
+  border: 1px solid var(--color-teal-border);
+}
+
+.badge-orange {
+  background-color: var(--color-orange-light);
+  color: var(--color-orange);
+  border: 1px solid var(--color-orange-border);
+}
+
+.badge-pink {
+  background-color: var(--color-pink-light);
+  color: var(--color-pink);
+  border: 1px solid var(--color-pink-border);
+}
+
+.badge-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
+}
+
+.badge-warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
+}
+
+.badge-info {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+  border: 1px solid var(--color-info-border);
+}
+
+.badge-destructive {
+  background-color: var(--color-destructive-light);
+  color: var(--color-destructive);
+  border: 1px solid var(--color-destructive-border);
+}
+
+.badge-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-secondary-foreground);
+  border: 1px solid var(--color-border);
+}
+
+/* Ranking Badges */
+.badge-rank-top {
+  background-color: var(--color-rank-top-light);
+  color: var(--color-rank-top);
+  border: 1px solid var(--color-rank-top-border);
+}
+
+.badge-rank-mid {
+  background-color: var(--color-rank-mid-light);
+  color: var(--color-rank-mid);
+  border: 1px solid var(--color-rank-mid-border);
+}
+
+.badge-rank-low {
+  background-color: var(--color-rank-low-light);
+  color: var(--color-rank-low);
+  border: 1px solid var(--color-rank-low-border);
+}
+
+/* ================= Alerts ================= */
+
+.alert {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.alert-success {
+  background-color: var(--color-success-light);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
+}
+
+.alert-warning {
+  background-color: var(--color-warning-light);
+  border-color: var(--color-warning-border);
+  color: oklch(0.50 0.12 80);
+}
+
+.alert-info {
+  background-color: var(--color-info-light);
+  border-color: var(--color-info-border);
+  color: var(--color-info);
+}
+
+.alert-destructive {
+  background-color: var(--color-destructive-light);
+  border-color: var(--color-destructive-border);
+  color: var(--color-destructive);
+}
+
+/* ================= Links ================= */
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* ================= Dividers ================= */
+
+.divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 1.5rem 0;
+  border: none;
+}
+
+/* ================= Progress Bar ================= */
+
+.progress {
+  width: 100%;
+  height: 0.5rem;
+  background-color: var(--color-muted);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: var(--color-primary);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ================= Skeleton ================= */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-muted) 0%,
+    var(--color-secondary) 50%,
+    var(--color-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: calc(var(--radius) - 0.25rem);
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ================= Scrollbar ================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.80 0.008 240);
 }

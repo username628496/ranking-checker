@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-
-// API base URL
-const API_BASE = import.meta.env.PROD
-  ? "https://ranking.aeseo1.org/api"
-  : "http://localhost:8001/api";
+import { API_ENDPOINTS } from "@/config/api";
 
 export type RankResult = {
   keyword: string;
@@ -29,7 +25,7 @@ export function useSSE(sessionId: string | null, opts?: { autoClear?: boolean })
 
   const url = useMemo(() => {
     if (!sessionId) return null;
-    return `${API_BASE}/stream?session_id=${encodeURIComponent(sessionId)}`;
+    return `${API_ENDPOINTS.STREAM}?session_id=${encodeURIComponent(sessionId)}`;
   }, [sessionId]);
 
   const cancel = () => {
@@ -95,9 +91,18 @@ export function useSSE(sessionId: string | null, opts?: { autoClear?: boolean })
 
     es.onerror = () => {
       // Nếu đã kết thúc hợp lệ thì bỏ qua lỗi do đóng kết nối tự nhiên
-      if (endedRef.current || es.readyState === EventSource.CLOSED) {
+      if (endedRef.current) {
         return;
       }
+
+      // Nếu connection đóng tự nhiên (sau khi hoàn thành stream)
+      if (es.readyState === EventSource.CLOSED) {
+        endedRef.current = true;
+        setStatus("ended");
+        esRef.current = null;
+        return;
+      }
+
       setError("SSE connection error");
       setStatus("error");
       es.close();
