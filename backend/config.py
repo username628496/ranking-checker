@@ -25,6 +25,12 @@ class Config:
     # Environment
     ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
+    # CORS - Allow multiple origins in production
+    ALLOWED_ORIGINS = os.getenv(
+        "ALLOWED_ORIGINS",
+        "https://ranking.aeseo1.org,http://ranking.aeseo1.org"
+    ).split(",")
+
     # Performance tuning
     REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "10"))
     MAX_WORKERS = int(os.getenv("MAX_WORKERS", "6"))

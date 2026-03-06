@@ -35,12 +35,13 @@ def create_app():
 
     # Setup CORS
     if Config.ENVIRONMENT == "production":
+        # Strip whitespace from origins
+        allowed_origins = [origin.strip() for origin in Config.ALLOWED_ORIGINS]
+        logger.info(f"CORS enabled for origins: {allowed_origins}")
+
         CORS(app, resources={
             r"/*": {
-                "origins": [
-                    "https://ranking.aeseo1.org",
-                    "http://ranking.aeseo1.org"
-                ],
+                "origins": allowed_origins,
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "allow_headers": ["Content-Type", "Authorization"],
                 "supports_credentials": True
@@ -48,6 +49,7 @@ def create_app():
         })
     else:
         CORS(app)  # Development: allow all origins
+        logger.info("CORS enabled for all origins (development mode)")
 
     # Initialize extensions
     db.init_app(app)

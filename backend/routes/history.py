@@ -163,21 +163,32 @@ def get_sessions():
         per_page = min(max(1, per_page), 100)  # Max 100 per page
 
         # Base query for sessions
+        # Note: Use COALESCE to generate pseudo-session-id for old records without session_id
+        # Format: "legacy_YYYY-MM-DD_HH:MM" grouped by hour for better organization
         base_query = db.session.query(
-            RankHistory.session_id,
+            func.coalesce(
+                RankHistory.session_id,
+                func.concat('legacy_', func.strftime('%Y-%m-%d_%H', RankHistory.checked_at))
+            ).label('session_id'),
             RankHistory.check_type,
             func.min(RankHistory.checked_at).label('checked_at'),
             func.count(func.distinct(RankHistory.keyword)).label('keyword_count'),
-            func.count(func.distinct(RankHistory.domain)).label('domain_count'),
+            # For single checks: count distinct domains (user input)
+            # For bulk checks: count total records (search results)
+            db.case(
+                (RankHistory.check_type == 'single', func.count(func.distinct(RankHistory.domain))),
+                else_=func.count(RankHistory.id)
+            ).label('domain_count'),
             func.count(RankHistory.id).label('total_records'),
             func.sum(RankHistory.api_credits_used).label('api_credits_used'),
             func.sum(db.case((RankHistory.position.isnot(None), 1), else_=0)).label('success_count'),
             RankHistory.location,
             RankHistory.device
-        ).filter(
-            RankHistory.session_id.isnot(None)
         ).group_by(
-            RankHistory.session_id,
+            func.coalesce(
+                RankHistory.session_id,
+                func.concat('legacy_', func.strftime('%Y-%m-%d_%H', RankHistory.checked_at))
+            ),
             RankHistory.check_type,
             RankHistory.location,
             RankHistory.device

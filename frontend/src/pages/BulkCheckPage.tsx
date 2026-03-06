@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
-  AlertCircle, Loader2, Monitor, Smartphone, FileText,
+  AlertCircle, Monitor, Smartphone, FileText,
   ChevronDown, ChevronUp, Copy, Layers, Clock, CheckCircle, RotateCcw, LayoutGrid,
-  MapPin, Rocket
+  MapPin, Rocket, Loader2
 } from "lucide-react";
 import axios from "axios";
-import { Card, Button, Textarea, Stack, Group, Box, Text, Badge, ActionIcon, Table, Anchor, Code, Alert, Modal, Tooltip } from "@mantine/core";
+import { Card, Button, Textarea, Stack, Group, Box, Text, Badge, ActionIcon, Table, Anchor, Code, Alert, Modal, Tooltip, SegmentedControl } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import BulkTemplate from "@components/BulkTemplate";
-import ProgressBar from "@components/ProgressBar";
+import PageHeader from "@components/PageHeader";
+import Footer from "@components/Footer";
 import { API_ENDPOINTS } from "@/config/api";
 import { getCurrentVietnameseTimestamp } from "@/utils/dateFormatter";
 import { getErrorMessage } from "@/utils/errorHandler";
@@ -47,9 +48,8 @@ export default function BulkCheckPage() {
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [expandedKeywords, setExpandedKeywords] = useState<Set<number>>(new Set());
-  const [progress, setProgress] = useState(0);
-  const [totalKeywords, setTotalKeywords] = useState(0);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const hasShownNotificationRef = useRef(false);
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -64,14 +64,14 @@ export default function BulkCheckPage() {
         setDevice(state.device || "desktop");
         setResults(state.results || []);
 
-        // Show notification if data was restored
-        if (hasResults) {
+        // Show notification if data was restored (only once)
+        if (hasResults && !hasShownNotificationRef.current) {
+          hasShownNotificationRef.current = true;
           notifications.show({
-            title: "Data Restored",
-            message: `Restored ${state.results.length} previous results`,
+            message: `${state.results.length} results restored`,
             color: "blue",
-            icon: <RotateCcw size={16} />,
-            autoClose: 3000,
+            icon: <RotateCcw size={14} />,
+            autoClose: 2000,
           });
         }
       }
@@ -133,7 +133,8 @@ export default function BulkCheckPage() {
     notifications.show({
       message: `Copied: ${result.keyword}`,
       color: 'green',
-      icon: <CheckCircle size={16} />,
+      icon: <CheckCircle size={14} />,
+      autoClose: 2000,
     });
   }
 
@@ -147,9 +148,10 @@ export default function BulkCheckPage() {
     });
     navigator.clipboard.writeText(allLines.join('\n'));
     notifications.show({
-      message: `Copied all results (${results.length} keywords)`,
+      message: `${results.length} keywords copied`,
       color: 'green',
-      icon: <CheckCircle size={16} />,
+      icon: <CheckCircle size={14} />,
+      autoClose: 2000,
     });
   }
 
@@ -175,8 +177,6 @@ export default function BulkCheckPage() {
     setLoading(true);
     setError(null);
     setResults([]);
-    setProgress(0);
-    setTotalKeywords(keywordList.length);
 
     try {
       const timestamp = getCurrentVietnameseTimestamp();
@@ -205,7 +205,6 @@ export default function BulkCheckPage() {
       }));
 
       setResults(resultsWithTimestamp);
-      setProgress(keywordList.length);
     } catch (err) {
       const errorMessage = getErrorMessage(err, "Có lỗi xảy ra khi kiểm tra");
       setError(errorMessage);
@@ -215,91 +214,85 @@ export default function BulkCheckPage() {
   };
 
   return (
-    <Box style={{ height: '100%', overflow: 'auto' }} p="md">
-      <Stack gap="md" maw={1200} mx="auto">
-        {/* Header */}
-        <Group justify="space-between" pb="md" style={{ borderBottom: '2px solid var(--mantine-color-blue-1)' }}>
-          <Group gap="md">
-            <Layers size={24} color="var(--mantine-color-blue-6)" />
-            <Box>
-              <Text size="lg" fw={700} c="blue">Bulk Keyword Check</Text>
-              <Text size="xs" c="dimmed">Check top 30 rankings for multiple keywords at once</Text>
-            </Box>
-          </Group>
-          <Group gap="xs">
-            {loading && (
-              <Badge
-                variant="filled"
-                color="blue"
-                leftSection={<Loader2 size={12} className="animate-spin" />}
+    <Box style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box style={{ flex: 1, overflow: 'auto' }} p="md">
+        <Stack gap="md" maw={1200} mx="auto">
+          <PageHeader
+            icon={<Layers size={28} />}
+            title="Bulk Keyword Check"
+            description="Check top rankings for multiple keywords at once (up to 30 results per keyword)"
+            color="#ec4899"
+            actions={
+              <Button
+                size="xs"
+                variant="white"
+                c="dark"
+                leftSection={<LayoutGrid size={14} />}
+                onClick={() => setTemplateModalOpen(true)}
               >
-                {progress}/{totalKeywords}
-              </Badge>
-            )}
-            <Button
-              size="xs"
-              variant="filled"
-              color="blue"
-              leftSection={<LayoutGrid size={14} />}
-              onClick={() => setTemplateModalOpen(true)}
-            >
-              Templates
-            </Button>
-          </Group>
-        </Group>
+                Templates
+              </Button>
+            }
+          />
 
         {/* Form */}
         <Card withBorder shadow="sm" p="md">
           <Group gap="xs" mb="md">
-            <Rocket size={16} color="var(--mantine-color-orange-6)" />
-            <Text fw={600} size="sm">Cấu hình kiểm tra</Text>
+            <Clock size={16} color="var(--mantine-color-dimmed)" />
+            <Text fw={600} size="sm">New Check</Text>
           </Group>
           <form onSubmit={handleSubmit}>
             <Stack gap="md">
-              {/* Keywords Input with Device/Location Controls */}
-              <Box>
-                <Group justify="space-between" mb="xs">
-                  <Text size="sm" c="dimmed">Keywords (one per line)</Text>
-                  <Group gap={4}>
-                    {/* Device Selection - Icon Only */}
-                    {deviceOptions.map((opt) => {
-                      const Icon = opt.icon;
-                      const isActive = device === opt.value;
-                      return (
-                        <Tooltip key={opt.value} label={opt.label} position="bottom">
-                          <ActionIcon
-                            variant={isActive ? "filled" : "outline"}
-                            color="orange"
-                            size="lg"
-                            onClick={() => setDevice(opt.value)}
-                          >
-                            <Icon size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                      );
-                    })}
-
-                    <Box style={{ width: 1, height: 24, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 4px' }} />
-
-                    {/* Location Selection - Icon Only */}
-                    {locationOptions.map((opt) => {
-                      const isActive = location === opt.value;
-                      return (
-                        <Tooltip key={opt.value} label={opt.label} position="bottom">
-                          <ActionIcon
-                            variant={isActive ? "filled" : "outline"}
-                            color="orange"
-                            size="lg"
-                            onClick={() => setLocation(opt.value)}
-                          >
-                            <MapPin size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                      );
-                    })}
-                  </Group>
+              {/* Device Selection */}
+              <Stack gap="xs">
+                <Group gap={6}>
+                  <Monitor size={16} color="var(--mantine-color-dimmed)" />
+                  <Text size="sm" fw={500}>Device</Text>
                 </Group>
+                <SegmentedControl
+                  value={device}
+                  onChange={(val) => setDevice(val as "desktop" | "mobile")}
+                  data={deviceOptions.map((opt) => ({
+                    value: opt.value,
+                    label: (
+                      <Group gap={6} justify="center">
+                        <opt.icon size={14} />
+                        <Text size="sm">{opt.label}</Text>
+                      </Group>
+                    ),
+                  }))}
+                  fullWidth
+                  color="blue"
+                />
+              </Stack>
 
+              {/* Location Selection */}
+              <Stack gap="xs">
+                <Group gap={6}>
+                  <MapPin size={16} color="var(--mantine-color-dimmed)" />
+                  <Text size="sm" fw={500}>Location</Text>
+                </Group>
+                <SegmentedControl
+                  value={location}
+                  onChange={setLocation}
+                  data={locationOptions.map((opt) => ({
+                    value: opt.value,
+                    label: (
+                      <Tooltip label={opt.label} position="bottom" withinPortal>
+                        <Text size="sm">{opt.shortLabel}</Text>
+                      </Tooltip>
+                    ),
+                  }))}
+                  fullWidth
+                  color="green"
+                />
+              </Stack>
+
+              {/* Keywords Input */}
+              <Box>
+                <Group gap={6} mb="xs">
+                  <Text size="sm" c="dimmed">Keywords (one per line)</Text>
+                </Group>
                 <Textarea
                   value={keywords}
                   onChange={(e) => setKeywords(e.target.value)}
@@ -312,37 +305,17 @@ export default function BulkCheckPage() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={loading}
-                color="orange"
+                disabled={loading || keywords.trim() === ""}
                 fullWidth
+                size="md"
+                mt="md"
                 leftSection={loading ? <Loader2 size={16} className="animate-spin" /> : <Rocket size={16} />}
               >
-                {loading ? `Checking... (${progress}/${totalKeywords})` : 'Start Bulk Check'}
+                {loading ? 'Checking...' : 'Start Bulk Check'}
               </Button>
             </Stack>
           </form>
         </Card>
-
-        {/* Progress */}
-        {(loading || results.length > 0) && (
-          <Card withBorder shadow="sm" p="md">
-            <ProgressBar
-              done={progress}
-              total={totalKeywords || progress}
-              current={loading && results.length > 0 ? { keyword: results[results.length - 1].keyword } : null}
-              statusText={
-                error
-                  ? `Error: ${error}`
-                  : !loading && results.length > 0
-                  ? "Completed"
-                  : loading
-                  ? "Checking..."
-                  : "Preparing..."
-              }
-              ended={!loading && results.length > 0}
-            />
-          </Card>
-        )}
 
         {/* Error Message */}
         {error && (
@@ -370,7 +343,7 @@ export default function BulkCheckPage() {
               </Box>
               <Text fw={600} size="sm">No results yet</Text>
               <Text size="xs" c="dimmed" ta="center" maw={300}>
-                Enter keywords above to check top 30 rankings for multiple keywords at once
+                Enter keywords above to check rankings for multiple keywords at once (fetches up to 30 results per keyword)
               </Text>
             </Stack>
           </Card>
@@ -378,17 +351,15 @@ export default function BulkCheckPage() {
 
         {/* Results */}
         {results.length > 0 && (
-          <Card withBorder shadow="md" p="lg" radius="md">
-            {/* Header with Actions */}
-            <Group justify="space-between" mb="xl" pb="md" style={{ borderBottom: '2px solid var(--mantine-color-green-1)' }}>
-              <Group gap="sm">
-                <CheckCircle size={20} color="var(--mantine-color-green-6)" />
-                <Box>
-                  <Text fw={600} size="md">Results</Text>
-                  <Text size="xs" c="dimmed">{results.length} keywords checked</Text>
-                </Box>
-              </Group>
-              <Group gap="xs">
+          <Card withBorder shadow="sm">
+            <Card.Section p="md" withBorder>
+              <Group justify="space-between">
+                <Group gap="xs">
+                  <CheckCircle size={16} color="var(--mantine-color-dimmed)" />
+                  <Text fw={600} size="sm">Results</Text>
+                  <Badge variant="light">{results.length}</Badge>
+                </Group>
+                <Group gap="xs">
                 <Tooltip label="Expand all results">
                   <ActionIcon variant="subtle" color="gray" size="lg" onClick={expandAll}>
                     <ChevronDown size={16} />
@@ -405,10 +376,12 @@ export default function BulkCheckPage() {
                   </ActionIcon>
                 </Tooltip>
               </Group>
-            </Group>
+              </Group>
+            </Card.Section>
 
             {/* Results List */}
-            <Stack gap="md">
+            <Card.Section p="md">
+              <Stack gap="md">
               {results.map((result, idx) => {
                 const isExpanded = expandedKeywords.has(idx);
 
@@ -454,7 +427,14 @@ export default function BulkCheckPage() {
                             )}
                             <Group gap={6}>
                               <FileText size={14} color="var(--mantine-color-gray-6)" />
-                              <Text size="xs" c="dimmed">Top 30 domains</Text>
+                              <Text size="xs" c="dimmed">
+                                {result.topDomains.length} {result.topDomains.length === 1 ? 'result' : 'results'}
+                                {result.topDomains.length < 30 && (
+                                  <Text component="span" c="orange" ml={4}>
+                                    (limited by search engine)
+                                  </Text>
+                                )}
+                              </Text>
                             </Group>
                           </Group>
                         </Box>
@@ -475,13 +455,7 @@ export default function BulkCheckPage() {
                     </Group>
 
                     {isExpanded && (
-                      <Box
-                        style={{
-                          borderTop: '1px solid var(--mantine-color-gray-2)',
-                          marginTop: 'var(--mantine-spacing-md)',
-                          paddingTop: 'var(--mantine-spacing-md)',
-                        }}
-                      >
+                      <Box pt="md" mt="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
                         <Table.ScrollContainer minWidth={600}>
                           <Table striped highlightOnHover withTableBorder withColumnBorders>
                             <Table.Thead>
@@ -495,12 +469,15 @@ export default function BulkCheckPage() {
                               {result.topDomains.slice(0, 30).map((domain, domainIdx) => {
                                 const displayRank = domainIdx + 1;
 
+                                // Ranking color map - CLAUDE.md Section 5
                                 let badgeColor = "gray";
-                                if (displayRank <= 3) {
+                                if (displayRank <= 6) {
                                   badgeColor = "green";
                                 } else if (displayRank <= 10) {
-                                  badgeColor = "cyan";
+                                  badgeColor = "yellow";
                                 } else if (displayRank <= 20) {
+                                  badgeColor = "gray";
+                                } else if (displayRank <= 50) {
                                   badgeColor = "orange";
                                 } else {
                                   badgeColor = "red";
@@ -539,11 +516,14 @@ export default function BulkCheckPage() {
                   </Card>
                 );
               })}
-            </Stack>
+              </Stack>
+            </Card.Section>
           </Card>
         )}
+        </Stack>
+      </Box>
 
-      </Stack>
+      <Footer />
 
       {/* Template Modal */}
       <Modal

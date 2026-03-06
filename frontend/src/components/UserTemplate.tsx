@@ -11,8 +11,9 @@ import {
  Check,
  Save,
  Play,
+ AlertCircle,
 } from "lucide-react";
-import { Button, TextInput, Textarea, Stack, Group, Box, Text, SimpleGrid, Card, Badge, ActionIcon, Notification } from "@mantine/core";
+import { Button, TextInput, Textarea, Stack, Group, Box, Text, SimpleGrid, Card, Badge, ActionIcon } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
  fetchTemplates,
@@ -57,9 +58,10 @@ export default function UserTemplate({ onUseTemplate }: Props) {
  async function handleSave() {
  if (!userName || !name) {
  notifications.show({
- title: 'Error',
  message: 'Please fill in all fields',
  color: 'red',
+ icon: <AlertCircle size={14} />,
+ autoClose: 2000,
  });
  return;
  }
@@ -81,10 +83,10 @@ export default function UserTemplate({ onUseTemplate }: Props) {
  resetForm();
  loadTemplates();
  notifications.show({
- title: 'Success',
  message: editId ? 'Template updated' : 'Template created',
  color: 'green',
- icon: <Check size={16} />,
+ icon: <Check size={14} />,
+ autoClose: 2000,
  });
  }
 
@@ -112,9 +114,10 @@ export default function UserTemplate({ onUseTemplate }: Props) {
  await deleteTemplate(id);
  loadTemplates();
  notifications.show({
- title: 'Deleted',
- message: 'Template deleted successfully',
+ message: 'Template deleted',
  color: 'red',
+ icon: <Trash2 size={14} />,
+ autoClose: 2000,
  });
  }
  }
@@ -124,7 +127,8 @@ export default function UserTemplate({ onUseTemplate }: Props) {
  notifications.show({
  message: `Copied ${label}`,
  color: 'green',
- icon: <Check size={16} />,
+ icon: <Check size={14} />,
+ autoClose: 2000,
  });
  }
 
@@ -135,9 +139,10 @@ export default function UserTemplate({ onUseTemplate }: Props) {
  if (onUseTemplate) {
  onUseTemplate(keywordsText, domainsText);
  notifications.show({
- message: 'Template loaded!',
+ message: 'Template loaded',
  color: 'green',
- icon: <Check size={16} />,
+ icon: <Check size={14} />,
+ autoClose: 2000,
  });
  window.scrollTo({ top: 0, behavior: "smooth" });
  }

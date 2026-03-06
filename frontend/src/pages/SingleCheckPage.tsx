@@ -5,6 +5,8 @@ import ResultTable from "@components/ResultTable";
 import UserTemplate from "@components/UserTemplate";
 import TopHighlights from "@components/TopHighlights";
 import { PositionChart } from "@components/PositionChart";
+import PageHeader from "@components/PageHeader";
+import Footer from "@components/Footer";
 import { useSSE, type RankResult } from "@hooks/useSSE";
 import { usePersistedState } from "@hooks/useLocalStorage";
 import {
@@ -66,11 +68,10 @@ export default function SingleCheckPage() {
         setExpectedTotal(persistedState.lastExpectedTotal);
 
         notifications.show({
-          title: "Data Restored",
-          message: `Restored ${persistedState.results.length} previous results`,
+          message: `${persistedState.results.length} results restored`,
           color: "blue",
-          icon: <RotateCcw size={16} />,
-          autoClose: 3000,
+          icon: <RotateCcw size={14} />,
+          autoClose: 2000,
         });
       }
     }
@@ -151,9 +152,9 @@ export default function SingleCheckPage() {
     setSessionId(null);
     clearState();
     notifications.show({
-      title: "Results Cleared",
-      message: "All results have been cleared",
+      message: "Results cleared",
       color: "gray",
+      icon: <Trash2 size={14} />,
       autoClose: 2000,
     });
   }
@@ -162,11 +163,10 @@ export default function SingleCheckPage() {
     cancel();
     setSessionId(null);
     notifications.show({
-      title: "Check Cancelled",
-      message: `Stopped at ${results.length} of ${expectedTotal} results`,
+      message: `Cancelled at ${results.length}/${expectedTotal}`,
       color: "orange",
-      icon: <XCircle size={16} />,
-      autoClose: 3000,
+      icon: <XCircle size={14} />,
+      autoClose: 2000,
     });
   }
 
@@ -197,65 +197,64 @@ export default function SingleCheckPage() {
     document.body.removeChild(link);
 
     notifications.show({
-      title: "Export Successful",
-      message: `Exported ${filteredResults.length} results to CSV`,
+      message: `${filteredResults.length} results exported`,
       color: "green",
-      icon: <Download size={16} />,
-      autoClose: 3000,
+      icon: <Download size={14} />,
+      autoClose: 2000,
     });
   }
 
   return (
-    <Box style={{ height: '100%', overflow: 'auto' }} p="md">
-      <Stack gap="md" maw={1200} mx="auto">
-        {/* Compact Header */}
-        <Group justify="space-between" pb="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
-          <Group gap="md">
-            <Target size={20} color="var(--mantine-color-blue-6)" />
-            <Box>
-              <Text size="lg" fw={600}>Keyword Rank Checker</Text>
-              <Text size="xs" c="dimmed">Track rankings in real-time</Text>
-            </Box>
-          </Group>
-          <Group gap="xs">
-            {(status === "streaming" || status === "connecting") && (
-              <>
-                <Badge variant="filled" color="blue" leftSection={<Activity size={12} />}>
-                  {status === "connecting" ? "Connecting" : "Live"}
-                </Badge>
+    <Box style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box style={{ flex: 1, overflow: 'auto' }} p="md">
+        <Stack gap="md" maw={1200} mx="auto">
+          <PageHeader
+            icon={<Target size={28} />}
+            title="Single Domain Check"
+            description="Check keyword rankings for specific domains across search engines"
+            color="#000080"
+            actions={
+              <Group gap="xs">
+                {(status === "streaming" || status === "connecting") && (
+                  <>
+                    <Badge variant="filled" color="blue" leftSection={<Activity size={12} />}>
+                      {status === "connecting" ? "Connecting" : "Live"}
+                    </Badge>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      color="red"
+                      leftSection={<XCircle size={14} />}
+                      onClick={handleCancel}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                )}
                 <Button
                   size="xs"
-                  variant="light"
-                  color="red"
-                  leftSection={<XCircle size={14} />}
-                  onClick={handleCancel}
+                  variant="white"
+                  c="dark"
+                  leftSection={<LayoutGrid size={14} />}
+                  onClick={() => setTemplateModalOpen(true)}
                 >
-                  Cancel
+                  Templates
                 </Button>
-              </>
-            )}
-            <Button
-              size="xs"
-              variant="light"
-              leftSection={<LayoutGrid size={14} />}
-              onClick={() => setTemplateModalOpen(true)}
-            >
-              Templates
-            </Button>
-            {results.length > 0 && status !== "streaming" && (
-              <Tooltip label="Clear all results">
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  onClick={handleClearResults}
-                  size="lg"
-                >
-                  <Trash2 size={16} />
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </Group>
-        </Group>
+                {results.length > 0 && status !== "streaming" && (
+                  <Tooltip label="Clear all results">
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      onClick={handleClearResults}
+                      size="lg"
+                    >
+                      <Trash2 size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+              </Group>
+            }
+          />
 
 
         {/* Form Section */}
@@ -417,7 +416,10 @@ export default function SingleCheckPage() {
             </Stack>
           </Card>
         )}
-      </Stack>
+        </Stack>
+      </Box>
+
+      <Footer />
 
       {/* Template Modal */}
       <Modal

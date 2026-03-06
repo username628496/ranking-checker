@@ -15,6 +15,7 @@ build/
 instance/
 *.db
 *.sqlite3
+migrations/
 
 # Node
 node_modules/

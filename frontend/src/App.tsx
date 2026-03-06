@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Home, TrendingUp, Settings, ClipboardList } from "lucide-react";
-import { AppShell, Burger, NavLink, Stack, Group, Box, Tooltip } from "@mantine/core";
+import { TrendingUp, Settings, ClipboardList, Menu, X, Home } from "lucide-react";
+import { AppShell, Box, ActionIcon, Tabs, Drawer, Stack, NavLink, Text } from "@mantine/core";
 import { ErrorBoundary } from "@components/ErrorBoundary";
 import SingleCheckPage from "./pages/SingleCheckPage";
 import BulkCheckPage from "./pages/BulkCheckPage";
@@ -10,161 +10,115 @@ import HistoryPage from "./pages/HistoryPage";
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("single");
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+
+  const navItems = [
+    { value: "single", label: "Home", icon: Home },
+    { value: "bulk", label: "30 Ranking", icon: TrendingUp },
+    { value: "settings", label: "Settings", icon: Settings },
+    { value: "history", label: "History", icon: ClipboardList },
+  ];
+
+  const handleTabChange = (value: string | null) => {
+    if (value) {
+      setActiveTab(value);
+      setMobileMenuOpen(false);
+
+      // Force refresh History when switching to it
+      if (value === "history") {
+        setHistoryRefreshKey(prev => prev + 1);
+      }
+    }
+  };
 
   return (
     <AppShell
-      header={{ height: 0 }}
-      navbar={{
-        width: 64,
-        breakpoint: 'md',
-        collapsed: { mobile: !mobileMenuOpen },
-      }}
+      header={{ height: { base: 60, sm: 70 } }}
       padding={0}
       styles={{
         main: {
+          paddingTop: 'var(--app-shell-header-height)',
           height: '100vh',
           overflow: 'hidden',
         },
       }}
     >
-      <AppShell.Navbar p={0} withBorder>
-        {/* Logo/Title */}
-        <AppShell.Section p="sm" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
-          <Group justify="center">
-            <Box
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '0.5rem',
-                backgroundColor: 'var(--mantine-color-blue-6)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
+      {/* Header */}
+      <AppShell.Header style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
+        <Box h="100%" px={{ base: 'sm', sm: 'md', lg: 'xl' }} style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Desktop Navigation - Center */}
+          <Box visibleFrom="md">
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              variant="pills"
+              radius="md"
             >
-              <Home size={16} color="white" />
-            </Box>
-          </Group>
-        </AppShell.Section>
+              <Tabs.List>
+                {navItems.map((item) => (
+                  <Tabs.Tab
+                    key={item.value}
+                    value={item.value}
+                    leftSection={<item.icon size={16} strokeWidth={2} />}
+                  >
+                    {item.label}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs>
+          </Box>
 
-        {/* Navigation */}
-        <AppShell.Section grow mt="xs" p="xs">
-          <Stack gap={4}>
-            <Tooltip label="Home" position="right">
-              <NavLink
-                leftSection={<Home size={18} />}
-                active={activeTab === "single"}
-                onClick={() => {
-                  setActiveTab("single");
-                  setMobileMenuOpen(false);
-                }}
-                styles={{
-                  root: {
-                    borderRadius: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                  },
-                  label: {
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                  },
-                }}
-              />
-            </Tooltip>
+          {/* Mobile Menu Button - Right */}
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="lg"
+            hiddenFrom="md"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{ position: 'absolute', right: 0, flexShrink: 0 }}
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </ActionIcon>
+        </Box>
+      </AppShell.Header>
 
-            <Tooltip label="30 Ranking" position="right">
-              <NavLink
-                leftSection={<TrendingUp size={18} />}
-                active={activeTab === "bulk"}
-                onClick={() => {
-                  setActiveTab("bulk");
-                  setMobileMenuOpen(false);
-                }}
-                styles={{
-                  root: {
-                    borderRadius: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                  },
-                  label: {
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                  },
-                }}
-              />
-            </Tooltip>
-
-            <Tooltip label="Settings" position="right">
-              <NavLink
-                leftSection={<Settings size={18} />}
-                active={activeTab === "settings"}
-                onClick={() => {
-                  setActiveTab("settings");
-                  setMobileMenuOpen(false);
-                }}
-                styles={{
-                  root: {
-                    borderRadius: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                  },
-                  label: {
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                  },
-                }}
-              />
-            </Tooltip>
-
-            <Tooltip label="History" position="right">
-              <NavLink
-                leftSection={<ClipboardList size={18} />}
-                active={activeTab === "history"}
-                onClick={() => {
-                  setActiveTab("history");
-                  setMobileMenuOpen(false);
-                }}
-                styles={{
-                  root: {
-                    borderRadius: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                  },
-                  label: {
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                  },
-                }}
-              />
-            </Tooltip>
-          </Stack>
-        </AppShell.Section>
-      </AppShell.Navbar>
-
-      {/* Mobile Menu Button */}
-      <Burger
+      {/* Mobile Navigation Drawer */}
+      <Drawer
         opened={mobileMenuOpen}
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        hiddenFrom="md"
-        size="sm"
-        style={{
-          position: 'fixed',
-          left: 16,
-          top: 16,
-          zIndex: 100,
+        onClose={() => setMobileMenuOpen(false)}
+        size="xs"
+        position="right"
+        title={
+          <Text fw={700} c="blue">
+            Navigation
+          </Text>
+        }
+        styles={{
+          title: { width: '100%' },
         }}
-      />
-
-      {/* Mobile Overlay */}
-      {mobileMenuOpen && (
-        <Box
-          onClick={() => setMobileMenuOpen(false)}
-          hiddenFrom="md"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 40,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          }}
-        />
-      )}
+      >
+        <Stack gap="xs">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.value}
+              label={item.label}
+              leftSection={<item.icon size={18} />}
+              active={activeTab === item.value}
+              onClick={() => handleTabChange(item.value)}
+              styles={{
+                root: {
+                  borderRadius: 'var(--mantine-radius-md)',
+                  padding: '0.75rem 1rem',
+                },
+                label: {
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                },
+              }}
+            />
+          ))}
+        </Stack>
+      </Drawer>
 
       {/* Main Content Area */}
       <AppShell.Main style={{ height: '100vh', overflow: 'hidden' }}>
@@ -186,7 +140,7 @@ export default function App() {
           )}
           {activeTab === "history" && (
             <ErrorBoundary fallbackTitle="History Page Error">
-              <HistoryPage />
+              <HistoryPage key={historyRefreshKey} />
             </ErrorBoundary>
           )}
         </Box>

@@ -7,8 +7,9 @@ import {
   Play,
   AlertCircle,
   Check,
+  MapPin,
 } from "lucide-react";
-import { Button, Textarea, Group, Stack, Text, Alert, Box, Tooltip } from "@mantine/core";
+import { Button, Textarea, Group, Stack, Text, Alert, Box, Tooltip, SegmentedControl, Badge } from "@mantine/core";
 import { useLocalStorage } from "@hooks/useLocalStorage";
 import { API_ENDPOINTS } from "@/config/api";
 
@@ -178,52 +179,52 @@ export default function Form({ onStart, onError, initialKeywords, initialDomains
   return (
     <Stack gap="md">
       {/* Configuration Options */}
-      <Group grow>
+      <Stack gap="md">
         {/* Device Selection */}
         <Stack gap="xs">
-          <Text size="sm" fw={500}>Device</Text>
-          <Group gap="xs">
-            {deviceOptions.map((opt) => {
-              const Icon = opt.icon;
-              const isActive = device === opt.value;
-              return (
-                <Button
-                  key={opt.value}
-                  variant={isActive ? "filled" : "outline"}
-                  size="sm"
-                  onClick={() => setDevice(opt.value)}
-                  flex={1}
-                  leftSection={<Icon size={16} />}
-                >
-                  {opt.label}
-                </Button>
-              );
-            })}
+          <Group gap={6}>
+            <Monitor size={16} color="var(--mantine-color-dimmed)" />
+            <Text size="sm" fw={500}>Device</Text>
           </Group>
+          <SegmentedControl
+            value={device}
+            onChange={(val) => setDevice(val as "desktop" | "mobile")}
+            data={deviceOptions.map((opt) => ({
+              value: opt.value,
+              label: (
+                <Group gap={6} justify="center">
+                  <opt.icon size={14} />
+                  <Text size="sm">{opt.label}</Text>
+                </Group>
+              ),
+            }))}
+            fullWidth
+            color="blue"
+          />
         </Stack>
 
         {/* Location Selection */}
         <Stack gap="xs">
-          <Text size="sm" fw={500}>Location</Text>
-          <Group gap="xs">
-            {locationOptions.map((opt) => {
-              const isActive = location === opt.value;
-              return (
-                <Button
-                  key={opt.value}
-                  variant={isActive ? "filled" : "outline"}
-                  size="sm"
-                  onClick={() => setLocation(opt.value)}
-                  flex={1}
-                  title={opt.label}
-                >
-                  {opt.shortLabel}
-                </Button>
-              );
-            })}
+          <Group gap={6}>
+            <MapPin size={16} color="var(--mantine-color-dimmed)" />
+            <Text size="sm" fw={500}>Location</Text>
           </Group>
+          <SegmentedControl
+            value={location}
+            onChange={setLocation}
+            data={locationOptions.map((opt) => ({
+              value: opt.value,
+              label: (
+                <Tooltip label={opt.label} position="bottom" withinPortal>
+                  <Text size="sm">{opt.shortLabel}</Text>
+                </Tooltip>
+              ),
+            }))}
+            fullWidth
+            color="green"
+          />
         </Stack>
-      </Group>
+      </Stack>
 
       {/* Input Section */}
       <Box ref={formRef}>
@@ -327,7 +328,7 @@ export default function Form({ onStart, onError, initialKeywords, initialDomains
         {/* Ready Summary */}
         {totalPairs > 0 && pairValidation.valid && (
           <Alert color="green" variant="light" mt="md" icon={<Check size={16} />}>
-            <Group gap="lg" wrap="wrap">
+            <Group gap="md" wrap="wrap">
               <Group gap={6}>
                 <Type size={14} />
                 <Text size="sm" c="dimmed">Keywords:</Text>
@@ -339,17 +340,28 @@ export default function Form({ onStart, onError, initialKeywords, initialDomains
                 <Text size="sm" fw={600}>{domains.length}</Text>
               </Group>
               <Group gap={6}>
-                <Text size="sm" c="dimmed">Total Checks:</Text>
+                <Text size="sm" c="dimmed">Total:</Text>
                 <Text size="sm" fw={600} c="green">{totalPairs}</Text>
               </Group>
               {selectedDevice && (
-                <Group gap={6}>
-                  <selectedDevice.icon size={14} />
-                  <Text size="sm" fw={500}>{selectedDevice.label}</Text>
-                </Group>
+                <Badge
+                  variant="light"
+                  color="blue"
+                  leftSection={<selectedDevice.icon size={12} />}
+                  size="lg"
+                >
+                  {selectedDevice.label}
+                </Badge>
               )}
               {selectedLocation && (
-                <Text size="sm" fw={500}>{selectedLocation.label}</Text>
+                <Badge
+                  variant="light"
+                  color="green"
+                  leftSection={<MapPin size={12} />}
+                  size="lg"
+                >
+                  {selectedLocation.label}
+                </Badge>
               )}
             </Group>
           </Alert>

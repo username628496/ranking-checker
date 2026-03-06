@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { ClipboardList, Home, Trophy, Tag, Globe, CheckCircle, XCircle, Coins, AlertCircle } from "lucide-react";
+import { ClipboardList, Home, Trophy, Tag, Globe, CheckCircle, XCircle, Coins, AlertCircle, Clock } from "lucide-react";
 import axios from "axios";
 import { Card, Stack, Group, Box, Text, Badge, Table, Loader, Pagination, Alert } from "@mantine/core";
+import PageHeader from "@components/PageHeader";
+import Footer from "@components/Footer";
 import { API_ENDPOINTS } from "@/config/api";
 import { formatSessionDateTime } from "@/utils/dateFormatter";
 import { getErrorMessage } from "@/utils/errorHandler";
@@ -32,6 +34,23 @@ export default function HistoryPage() {
     loadSessions(page);
   }, [page]);
 
+  // Auto-reload when component mounts or page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🔄 History page visible - reloading sessions');
+        loadSessions(page);
+      }
+    };
+
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [page]);
+
   const loadSessions = async (pageNum: number = 1) => {
     setLoading(true);
     setError(null);
@@ -41,11 +60,20 @@ export default function HistoryPage() {
           page: pageNum,
           per_page: perPage,
         },
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
       });
       setSessions(response.data.sessions || []);
       setTotalPages(response.data.total_pages || 1);
       setTotal(response.data.total || 0);
       setPage(response.data.page || 1);
+
+      // Debug logging
+      const singleCount = response.data.sessions.filter((s: Session) => s.check_type === 'single').length;
+      const bulkCount = response.data.sessions.filter((s: Session) => s.check_type === 'bulk').length;
+      console.log(`✅ History loaded: Page ${pageNum}, Total ${response.data.total}, Single: ${singleCount}, Bulk: ${bulkCount}`);
     } catch (err) {
       const errorMessage = getErrorMessage(err, "Failed to load history sessions");
       setError(errorMessage);
@@ -75,18 +103,15 @@ export default function HistoryPage() {
   };
 
   return (
-    <Box style={{ height: '100%', overflow: 'auto' }} p="md">
-      <Stack gap="md" maw={1200} mx="auto">
-        {/* Header */}
-        <Group justify="space-between" pb="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
-          <Group gap="md">
-            <ClipboardList size={20} color="var(--mantine-color-blue-6)" />
-            <Box>
-              <Text size="lg" fw={600}>Check History</Text>
-              <Text size="xs" c="dimmed">View all your previous check sessions</Text>
-            </Box>
-          </Group>
-        </Group>
+    <Box style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box style={{ flex: 1, overflow: 'auto' }} p="md">
+        <Stack gap="md" maw={1200} mx="auto">
+          <PageHeader
+            icon={<Clock size={28} />}
+            title="Check History"
+            description="View and manage your previous ranking checks"
+            color="#3b82f6"
+          />
 
         {/* Error Message */}
         {error && (
@@ -105,17 +130,45 @@ export default function HistoryPage() {
           {loading ? (
             <Stack align="center" gap="md" py="xl">
               <Loader size="lg" />
-              <Text size="sm" c="dimmed">Loading...</Text>
+              <Text size="sm" c="dimmed">Loading sessions...</Text>
             </Stack>
           ) : error ? (
             <Stack align="center" gap="md" py="xl">
-              <AlertCircle size={48} color="var(--mantine-color-red-6)" />
-              <Text size="sm" c="dimmed">Failed to load sessions</Text>
+              <Box
+                style={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 'var(--mantine-radius-md)',
+                  backgroundColor: 'var(--mantine-color-red-0)'
+                }}
+              >
+                <AlertCircle size={24} color="var(--mantine-color-red-6)" />
+              </Box>
+              <Text fw={600} size="sm">Failed to load sessions</Text>
+              <Text size="xs" c="dimmed">Please try refreshing the page</Text>
             </Stack>
           ) : sessions.length === 0 ? (
             <Stack align="center" gap="md" py="xl">
-              <ClipboardList size={48} color="var(--mantine-color-dimmed)" />
-              <Text size="sm" c="dimmed">No check sessions found</Text>
+              <Box
+                style={{
+                  width: 48,
+                  height: 48,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 'var(--mantine-radius-md)',
+                  backgroundColor: 'var(--mantine-color-gray-1)'
+                }}
+              >
+                <ClipboardList size={24} color="var(--mantine-color-dimmed)" />
+              </Box>
+              <Text fw={600} size="sm">No check sessions found</Text>
+              <Text size="xs" c="dimmed" ta="center" maw={300}>
+                Your check history will appear here once you start ranking checks
+              </Text>
             </Stack>
           ) : (
             <Table.ScrollContainer minWidth={900}>
@@ -210,7 +263,10 @@ export default function HistoryPage() {
             Showing {sessions.length} of {total} sessions
           </Text>
         )}
-      </Stack>
+        </Stack>
+      </Box>
+
+      <Footer />
     </Box>
   );
 }

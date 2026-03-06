@@ -75,8 +75,13 @@ def bulk_check():
             if not validate_keyword(keyword):
                 continue
 
-            # Get top 30 results from Serper (fetch 50 to ensure we have enough after filtering)
-            organic = serper_search(keyword, location, device, max_results=50, api_key=api_key)
+            # ✅ FIX: Fetch more results to ensure we get 30 valid domains
+            # With improved serper_search pagination, we now get more consistent results
+            # Fetch 50-60 to account for: empty links, parsing errors, and sparse Google results
+            fetch_count = max(50, limit + 20)  # Add 20 buffer above limit
+            organic = serper_search(keyword, location, device, max_results=fetch_count, api_key=api_key)
+
+            logger.info(f"Bulk check: '{keyword}' fetched {len(organic)} results (target: {limit})")
 
             top_domains = []
 
@@ -111,6 +116,17 @@ def bulk_check():
                 except:
                     continue
 
+            # Log result count
+            if len(top_domains) < limit:
+                logger.warning(
+                    f"⚠️ Bulk check '{keyword}': Only {len(top_domains)}/{limit} results "
+                    f"(fetched {len(organic)}, after filtering got {len(top_domains)})"
+                )
+            else:
+                logger.info(
+                    f"✅ Bulk check '{keyword}': Got {len(top_domains)}/{limit} results"
+                )
+
             results.append({
                 "keyword": keyword,
                 "topDomains": top_domains,
@@ -133,7 +149,7 @@ def bulk_check():
                     db.session.add(history)
 
                 db.session.commit()
-                logger.info(f"Saved bulk history for {keyword}: {len(top_domains)} domains")
+                logger.info(f"💾 Saved bulk history: '{keyword}' → {len(top_domains)} domains to DB")
 
             except Exception as e:
                 logger.warning(f"Failed to save bulk history for {keyword}: {e}")

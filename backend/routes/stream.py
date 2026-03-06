@@ -7,7 +7,7 @@ import secrets
 from urllib.parse import unquote_plus
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from flask import Blueprint, request, jsonify, Response, stream_with_context
+from flask import Blueprint, request, jsonify, Response, stream_with_context, current_app
 
 from config import Config, logger
 from utils import validate_keyword, validate_domain_like, chunked
@@ -74,6 +74,15 @@ def save():
     return jsonify({"session_id": sid})
 
 
+def process_pair_with_context(app, *args, **kwargs):
+    """
+    Wrapper to run process_pair within Flask app context
+    Required for database operations in background threads
+    """
+    with app.app_context():
+        return process_pair(*args, **kwargs)
+
+
 @stream_bp.route("/api/stream")
 def stream():
     """
@@ -111,13 +120,17 @@ def stream():
         pairs = list(zip(kws, doms))
 
         try:
+            # Get current app for context
+            app = current_app._get_current_object()
+
             # Process pairs in parallel with ThreadPoolExecutor
             with ThreadPoolExecutor(max_workers=Config.MAX_WORKERS) as ex:
                 for batch in chunked(pairs, Config.CHUNK_SIZE):
-                    # Submit tasks
+                    # Submit tasks with app context wrapper
                     futs = [
                         ex.submit(
-                            process_pair,
+                            process_pair_with_context,
+                            app,
                             k, d, location, device, sid, "single",
                             save_to_db=True,
                             db_session=db.session,

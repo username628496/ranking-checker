@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Key, Check, X, AlertCircle, Settings, Save } from "lucide-react";
+import { Key, Check, X, AlertCircle, Settings, Save, XCircle } from "lucide-react";
 import { Card, Button, Stack, Group, Box, Text, Alert, Select, NumberInput, PasswordInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import PageHeader from "@components/PageHeader";
+import Footer from "@components/Footer";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/config/api";
 import { getErrorMessage } from "@/utils/errorHandler";
@@ -39,18 +41,17 @@ export default function ApiSettingsPage() {
     if (!serperApiKey.trim()) {
       setApiKeyStatus("invalid");
       notifications.show({
-        title: 'Error',
         message: 'Please enter an API key',
         color: 'red',
-        icon: <X size={16} />,
+        icon: <AlertCircle size={14} />,
+        autoClose: 2000,
       });
       return;
     }
 
     // Show loading notification
     const loadingNotification = notifications.show({
-      title: 'Testing API Key',
-      message: 'Validating your Serper API key...',
+      message: 'Testing API key...',
       color: 'blue',
       loading: true,
       autoClose: false,
@@ -67,18 +68,18 @@ export default function ApiSettingsPage() {
       if (response.data.valid) {
         setApiKeyStatus("valid");
         notifications.show({
-          title: 'Success',
-          message: response.data.message || 'API key is valid!',
+          message: 'API key valid',
           color: 'green',
-          icon: <Check size={16} />,
+          icon: <Check size={14} />,
+          autoClose: 2000,
         });
       } else {
         setApiKeyStatus("invalid");
         notifications.show({
-          title: 'Invalid API Key',
-          message: response.data.message || 'API key validation failed',
+          message: 'Invalid API key',
           color: 'red',
-          icon: <X size={16} />,
+          icon: <XCircle size={14} />,
+          autoClose: 2000,
         });
       }
     } catch (err) {
@@ -91,10 +92,10 @@ export default function ApiSettingsPage() {
       );
 
       notifications.show({
-        title: 'Error',
         message: errorMessage,
         color: 'red',
-        icon: <X size={16} />,
+        icon: <AlertCircle size={14} />,
+        autoClose: 2000,
       });
     }
   };
@@ -113,10 +114,10 @@ export default function ApiSettingsPage() {
     localStorage.setItem("max_workers", maxWorkers.toString());
 
     notifications.show({
-      title: 'Success',
-      message: 'Settings saved successfully!',
+      message: 'Settings saved',
       color: 'green',
-      icon: <Check size={16} />,
+      icon: <Check size={14} />,
+      autoClose: 2000,
     });
   };
 
@@ -127,23 +128,21 @@ export default function ApiSettingsPage() {
     notifications.show({
       message: 'API Key cleared',
       color: 'blue',
-      icon: <Check size={16} />,
+      icon: <Check size={14} />,
+      autoClose: 2000,
     });
   };
 
   return (
-    <Box style={{ height: '100%', overflow: 'auto' }} p="md">
-      <Stack gap="md" maw={1200} mx="auto">
-        {/* Header */}
-        <Group justify="space-between" pb="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
-          <Group gap="md">
-            <Settings size={20} color="var(--mantine-color-blue-6)" />
-            <Box>
-              <Text size="lg" fw={600}>API & Configuration Settings</Text>
-              <Text size="xs" c="dimmed">Manage your API keys and default preferences</Text>
-            </Box>
-          </Group>
-        </Group>
+    <Box style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box style={{ flex: 1, overflow: 'auto' }} p="md">
+        <Stack gap="md" maw={1200} mx="auto">
+          <PageHeader
+            icon={<Settings size={28} />}
+            title="API Settings"
+            description="Configure your Serper API key and application settings"
+            color="#10b981"
+          />
 
         {/* API Settings Section */}
         <Card withBorder shadow="sm" p="md">
@@ -283,7 +282,10 @@ export default function ApiSettingsPage() {
             </Stack>
           </Stack>
         </Alert>
-      </Stack>
+        </Stack>
+      </Box>
+
+      <Footer />
     </Box>
   );
 }
